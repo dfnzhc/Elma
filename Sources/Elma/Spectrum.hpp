@@ -3,6 +3,8 @@
 #include "Vector.hpp"
 #include <vector>
 
+namespace elma {
+
 /// For now, lajolla assumes we are operating in the linear and trimulus RGB color space.
 /// In the future we might implement a proper spectral renderer.
 using Spectrum = Vector3;
@@ -24,12 +26,12 @@ inline Spectrum fromRGB(const Vector3& rgb)
 
 inline Spectrum sqrt(const Spectrum& s)
 {
-    return Vector3{sqrt(max(s[0], Real(0))), sqrt(max(s[1], Real(0))), sqrt(max(s[2], Real(0)))};
+    return Vector3{std::sqrt(max(s[0], Real(0))), std::sqrt(max(s[1], Real(0))), std::sqrt(max(s[2], Real(0)))};
 }
 
 inline Spectrum exp(const Spectrum& s)
 {
-    return Vector3{exp(s[0]), exp(s[1]), exp(s[2])};
+    return Vector3{std::exp(s[0]), std::exp(s[1]), std::exp(s[2])};
 }
 
 inline Real luminance(const Spectrum& s)
@@ -56,22 +58,22 @@ inline Real xFit_1931(Real wavelength)
     Real t1 = (wavelength - Real(442.0)) * ((wavelength < Real(442.0)) ? Real(0.0624) : Real(0.0374));
     Real t2 = (wavelength - Real(599.8)) * ((wavelength < Real(599.8)) ? Real(0.0264) : Real(0.0323));
     Real t3 = (wavelength - Real(501.1)) * ((wavelength < Real(501.1)) ? Real(0.0490) : Real(0.0382));
-    return Real(0.362) * exp(-Real(0.5) * t1 * t1) + Real(1.056) * exp(-Real(0.5) * t2 * t2) -
-           Real(0.065) * exp(-Real(0.5) * t3 * t3);
+    return Real(0.362) * std::exp(-Real(0.5) * t1 * t1) + Real(1.056) * std::exp(-Real(0.5) * t2 * t2) -
+           Real(0.065) * std::exp(-Real(0.5) * t3 * t3);
 }
 
 inline Real yFit_1931(Real wavelength)
 {
     Real t1 = (wavelength - Real(568.8)) * ((wavelength < Real(568.8)) ? Real(0.0213) : Real(0.0247));
     Real t2 = (wavelength - Real(530.9)) * ((wavelength < Real(530.9)) ? Real(0.0613) : Real(0.0322));
-    return Real(0.821) * exp(-Real(0.5) * t1 * t1) + Real(0.286) * exp(-Real(0.5) * t2 * t2);
+    return Real(0.821) * std::exp(-Real(0.5) * t1 * t1) + Real(0.286) * std::exp(-Real(0.5) * t2 * t2);
 }
 
 inline Real zFit_1931(Real wavelength)
 {
     Real t1 = (wavelength - Real(437.0)) * ((wavelength < Real(437.0)) ? Real(0.0845) : Real(0.0278));
     Real t2 = (wavelength - Real(459.0)) * ((wavelength < Real(459.0)) ? Real(0.0385) : Real(0.0725));
-    return Real(1.217) * exp(-Real(0.5) * t1 * t1) + Real(0.681) * exp(-Real(0.5) * t2 * t2);
+    return Real(1.217) * std::exp(-Real(0.5) * t1 * t1) + Real(0.681) * std::exp(-Real(0.5) * t2 * t2);
 }
 
 inline Vector3 XYZintegral_coeff(Real wavelength)
@@ -138,3 +140,5 @@ inline Vector3 sRGB_to_RGB(const Vector3& srgb)
     }
     return rgb;
 }
+
+} // namespace elma

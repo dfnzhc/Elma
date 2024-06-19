@@ -3,6 +3,7 @@
 #include "Scene.hpp"
 #include "Pcg.hpp"
 
+namespace elma {
 /// Unidirectional path tracing
 Spectrum path_tracing(const Scene& scene,
                       int x,
@@ -322,3 +323,5 @@ Spectrum path_tracing(const Scene& scene,
     }
     return radiance;
 }
+
+} // namespace elma

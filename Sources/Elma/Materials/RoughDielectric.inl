@@ -42,10 +42,10 @@ Spectrum eval_op::operator()(const RoughDielectric& bsdf) const
     // However, using the incoming direction allows
     // us to use F to decide whether to reflect or refract during sampling.
     Real h_dot_in = dot(half_vector, dir_in);
-    Real F        = fresnel_dielectric(h_dot_in, eta);
-    Real D        = GTR2(dot(frame.n, half_vector), roughness);
-    Real G        = smith_masking_gtr2(to_local(frame, dir_in), roughness) *
-             smith_masking_gtr2(to_local(frame, dir_out), roughness);
+    Real F        = elma::fresnel_dielectric(h_dot_in, eta);
+    Real D        = elma::GTR2(dot(frame.n, half_vector), roughness);
+    Real G        = elma::smith_masking_gtr2(to_local(frame, dir_in), roughness) *
+             elma::smith_masking_gtr2(to_local(frame, dir_out), roughness);
     if (reflect) {
         return Ks * (F * D * G) / (4 * fabs(dot(frame.n, dir_in)));
     }
@@ -106,11 +106,11 @@ Real pdf_sample_bsdf_op::operator()(const RoughDielectric& bsdf) const
     // whether to sample reflection or refraction
     // so PDF ~ F * D * G_in for reflection, PDF ~ (1 - F) * D * G_in for refraction.
     Real h_dot_in = dot(half_vector, dir_in);
-    Real F        = fresnel_dielectric(h_dot_in, eta);
-    Real D        = GTR2(dot(half_vector, frame.n), roughness);
-    Real G_in     = smith_masking_gtr2(to_local(frame, dir_in), roughness);
+    Real F        = elma::fresnel_dielectric(h_dot_in, eta);
+    Real D        = elma::GTR2(dot(half_vector, frame.n), roughness);
+    Real G_in     = elma::smith_masking_gtr2(to_local(frame, dir_in), roughness);
     if (reflect) {
-        return (F * D * G_in) / (4 * fabs(dot(frame.n, dir_in)));
+        return (F * D * G_in) / (4 * std::fabs(dot(frame.n, dir_in)));
     }
     else {
         Real h_dot_out  = dot(half_vector, dir_out);
@@ -136,7 +136,7 @@ std::optional<BSDFSampleRecord> sample_bsdf_op::operator()(const RoughDielectric
     // Sample a micro normal and transform it to world space -- this is our half-vector.
     Real alpha                 = roughness * roughness;
     Vector3 local_dir_in       = to_local(frame, dir_in);
-    Vector3 local_micro_normal = sample_visible_normals(local_dir_in, alpha, rnd_param_uv);
+    Vector3 local_micro_normal = elma::sample_visible_normals(local_dir_in, alpha, rnd_param_uv);
 
     Vector3 half_vector = to_world(frame, local_micro_normal);
     // Flip half-vector if it's below surface
@@ -147,7 +147,7 @@ std::optional<BSDFSampleRecord> sample_bsdf_op::operator()(const RoughDielectric
     // Now we need to decide whether to reflect or refract.
     // We do this using the Fresnel term.
     Real h_dot_in = dot(half_vector, dir_in);
-    Real F        = fresnel_dielectric(h_dot_in, eta);
+    Real F        = elma::fresnel_dielectric(h_dot_in, eta);
 
     if (rnd_param_w <= F) {
         // Reflection
@@ -169,7 +169,7 @@ std::optional<BSDFSampleRecord> sample_bsdf_op::operator()(const RoughDielectric
         if (h_dot_in < 0) {
             half_vector = -half_vector;
         }
-        Real h_dot_out    = sqrt(h_dot_out_sq);
+        Real h_dot_out    = std::sqrt(h_dot_out_sq);
         Vector3 refracted = -dir_in / eta + (fabs(h_dot_in) / eta - h_dot_out) * half_vector;
         return BSDFSampleRecord{refracted, eta, roughness};
     }

@@ -3,6 +3,8 @@
 #include "Spectrum.hpp"
 #include "Transform.hpp"
 
+namespace elma {
+
 struct light_power_op
 {
     Real operator()(const DiffuseAreaLight& light) const;
@@ -86,3 +88,5 @@ void init_sampling_dist(Light& light, const Scene& scene)
 {
     return std::visit(init_sampling_dist_op{scene}, light);
 }
+
+} // namespace elma

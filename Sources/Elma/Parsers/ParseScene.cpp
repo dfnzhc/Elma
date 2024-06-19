@@ -10,6 +10,8 @@
 #include <map>
 #include <regex>
 
+namespace elma {
+
 const Real c_default_fov             = 45.0;
 const int c_default_res              = 256;
 const std::string c_default_filename = "image.exr";
@@ -900,13 +902,13 @@ parse_sensor(pugi::xml_node node,
         (fov_axis == FovAxis::LARGER && width < height))
     {
         Real aspect = width / Real(height);
-        fov         = degrees(2 * atan(tan(radians(fov) / 2) * aspect));
+        fov         = degrees(2 * std::atan(std::tan(radians(fov) / 2) * aspect));
     }
     else if (fov_axis == FovAxis::DIAGONAL) {
         Real aspect   = width / Real(height);
-        Real diagonal = 2 * tan(radians(fov) / 2);
-        Real width    = diagonal / sqrt(1 + 1 / (aspect * aspect));
-        fov           = degrees(2 * atan(width / 2));
+        Real diagonal = 2 * std::tan(radians(fov) / 2);
+        Real width    = diagonal / std::sqrt(1 + 1 / (aspect * aspect));
+        fov           = degrees(2 * std::atan(width / 2));
     }
 
     return std::make_tuple(Camera(to_world, fov, width, height, filter, medium_id), filename, sampler);
@@ -933,13 +935,13 @@ Texture<Real> alpha_to_roughness(pugi::xml_node node,
             // Convert alpha to roughness.
             Image1 roughness_img(alpha.width, alpha.height);
             for (int i = 0; i < alpha.width * alpha.height; i++) {
-                roughness_img.data[i] = sqrt(alpha.data[i]);
+                roughness_img.data[i] = std::sqrt(alpha.data[i]);
             }
             return make_image_float_texture(ref_id, roughness_img, texture_pool, t.uscale, t.vscale);
         }
         else if (t.type == TextureType::CHECKERBOARD) {
-            Real roughness0 = sqrt(avg(t.color0));
-            Real roughness1 = sqrt(avg(t.color1));
+            Real roughness0 = std::sqrt(avg(t.color0));
+            Real roughness1 = std::sqrt(avg(t.color1));
             return make_checkerboard_float_texture(roughness0, roughness1, t.uscale, t.vscale, t.uoffset, t.voffset);
         }
         else {
@@ -948,7 +950,7 @@ Texture<Real> alpha_to_roughness(pugi::xml_node node,
     }
     else if (type == "float") {
         Real alpha = parse_float(node.attribute("value").value(), default_map);
-        return make_constant_float_texture(sqrt(alpha));
+        return elma::make_constant_float_texture(std::sqrt(alpha));
     }
     else if (type == "texture") {
         ParsedTexture t = parse_texture(node, default_map);
@@ -964,14 +966,14 @@ Texture<Real> alpha_to_roughness(pugi::xml_node node,
             // Convert alpha to roughness.
             Image1 roughness_img(alpha.width, alpha.height);
             for (int i = 0; i < alpha.width * alpha.height; i++) {
-                roughness_img.data[i] = sqrt(alpha.data[i]);
+                roughness_img.data[i] = std::sqrt(alpha.data[i]);
             }
             return make_image_float_texture(
                 tmp_ref_name, t.filename, texture_pool, t.uscale, t.vscale, t.uoffset, t.voffset);
         }
         else if (t.type == TextureType::CHECKERBOARD) {
-            Real roughness0 = sqrt(avg(t.color0));
-            Real roughness1 = sqrt(avg(t.color1));
+            Real roughness0 = std::sqrt(avg(t.color0));
+            Real roughness1 = std::sqrt(avg(t.color1));
             return make_checkerboard_float_texture(roughness0, roughness1, t.uscale, t.vscale, t.uoffset, t.voffset);
         }
         else {
@@ -1714,3 +1716,5 @@ std::unique_ptr<Scene> parse_scene(const fs::path& filename, const RTCDevice& em
     fs::current_path(old_path);
     return scene;
 }
+
+} // namespace elma

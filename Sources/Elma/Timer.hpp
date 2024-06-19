@@ -5,6 +5,7 @@
 #include <chrono>
 #include <ctime>
 
+namespace elma {
 /// For measuring how long an operation takes.
 /// C++ chrono unfortunately makes the whole type system very complicated.
 struct Timer
@@ -20,3 +21,5 @@ inline Real tick(Timer& timer)
     timer.last                                             = now;
     return ret;
 }
+
+} // namespace elma

@@ -26,7 +26,7 @@ bool solve_quadratic(Real a, Real b, Real c, Real *t0, Real *t1) {
     if (discriminant < 0) {
         return false;
     }
-    Real root_discriminant = sqrt(discriminant);
+    Real root_discriminant = std::sqrt(discriminant);
     if (b >= 0) {
         *t0 = (- b - root_discriminant) / (2 * a);
         *t1 = 2 * c / (- b - root_discriminant);
@@ -169,9 +169,9 @@ PointAndNormal sample_point_on_shape_op::operator()(const Sphere &sphere) const 
     if (distance_squared(ref_point, center) < r * r) {
         // If the reference point is inside the sphere, just sample the whole sphere uniformly
         Real z = 1 - 2 * uv.x;
-        Real r_ = sqrt(fmax(Real(0), 1 - z * z));
+        Real r_ = std::sqrt(std::fmax(Real(0), 1 - z * z));
         Real phi = 2 * c_PI * uv.y;
-        Vector3 offset(r_ * cos(phi), r_ * sin(phi), z);
+        Vector3 offset(r_ * std::cos(phi), r_ * std::sin(phi), z);
         Vector3 position = center + r * offset;
         Vector3 normal = offset;
         return PointAndNormal{position, normal};
@@ -188,24 +188,23 @@ PointAndNormal sample_point_on_shape_op::operator()(const Sphere &sphere) const 
     // for the polar coordinate angle on the substended disk.
     // I just don't like the theta/phi naming convention...
     Real sin_elevation_max_sq = r * r / distance_squared(ref_point, center);
-    Real cos_elevation_max = sqrt(max(Real(0), 1 - sin_elevation_max_sq));
+    Real cos_elevation_max = std::sqrt(max(Real(0), 1 - sin_elevation_max_sq));
     // Uniformly interpolate between 1 (angle 0) and max
     Real cos_elevation = (1 - uv[0]) + uv[0] * cos_elevation_max;
-    Real sin_elevation = sqrt(max(Real(0), 1 - cos_elevation * cos_elevation));
+    Real sin_elevation = std::sqrt(max(Real(0), 1 - cos_elevation * cos_elevation));
     Real azimuth = uv[1] * 2 * c_PI;
 
     // Now we have a ray direction and a sphere, we can just ray trace and find
     // the intersection point. Pbrt uses an more clever and numerically robust
     // approach which I will just shamelessly copy here.
     Real dc = distance(ref_point, center);
-    Real ds = dc * cos_elevation -
-        sqrt(max(Real(0), r * r - dc * dc * sin_elevation * sin_elevation));
+    Real ds = dc * cos_elevation - std::sqrt(max(Real(0), r * r - dc * dc * sin_elevation * sin_elevation));
     Real cos_alpha = (dc * dc + r * r - ds * ds) / (2 * dc * r);
-    Real sin_alpha = sqrt(max(Real(0), 1 - cos_alpha * cos_alpha));
+    Real sin_alpha = std::sqrt(max(Real(0), 1 - cos_alpha * cos_alpha));
     // Add negative sign since normals point outwards.
     Vector3 n_on_sphere = -to_world(frame,
-        Vector3{sin_alpha * cos(azimuth),
-                sin_alpha * sin(azimuth),
+        Vector3{sin_alpha * std::cos(azimuth),
+                sin_alpha * std::sin(azimuth),
                 cos_alpha});
     Vector3 p_on_sphere = r * n_on_sphere + center;
     return PointAndNormal{p_on_sphere, n_on_sphere};
@@ -226,14 +225,14 @@ Real pdf_point_on_shape_op::operator()(const Sphere &sphere) const {
     }
     
     Real sin_elevation_max_sq = r * r / distance_squared(ref_point, center);
-    Real cos_elevation_max = sqrt(max(Real(0), 1 - sin_elevation_max_sq));
+    Real cos_elevation_max = std::sqrt(max(Real(0), 1 - sin_elevation_max_sq));
     // Uniform sampling PDF of a cone.
     Real pdf_solid_angle = 1 / (2 * c_PI * (1 - cos_elevation_max));
     // Convert it back to area measure
     Vector3 p_on_sphere = point_on_shape.position;
     Vector3 n_on_sphere = point_on_shape.normal;
     Vector3 dir = normalize(p_on_sphere - ref_point);
-    return pdf_solid_angle * fabs(dot(n_on_sphere, dir)) /
+    return pdf_solid_angle * std::fabs(dot(n_on_sphere, dir)) /
         distance_squared(ref_point, p_on_sphere);
 }
 
@@ -248,12 +247,12 @@ ShadingInfo compute_shading_info_op::operator()(const Sphere &sphere) const {
     // p = center + {r * cos(u) * sin(v), r * sin(u) * sin(v), r * cos(v)}
     // thus dpdu = {-r * sin(u) * sin(v), r * cos(u) * sin(v), 0}
     //      dpdv = { r * cos(u) * cos(v), r * sin(u) * cos(v), - r * sin(v)}
-    Vector3 dpdu{-sphere.radius * sin(vertex.st[0]) * sin(vertex.st[1]),
-                  sphere.radius * cos(vertex.st[0]) * sin(vertex.st[1]),
+    Vector3 dpdu{-sphere.radius * std::sin(vertex.st[0]) * std::sin(vertex.st[1]),
+                  sphere.radius * std::cos(vertex.st[0]) * std::sin(vertex.st[1]),
                  Real(0)};
-    Vector3 dpdv{ sphere.radius * cos(vertex.st[0]) * cos(vertex.st[1]),
-                  sphere.radius * sin(vertex.st[0]) * cos(vertex.st[1]),
-                 -sphere.radius * sin(vertex.st[1])};
+    Vector3 dpdv{ sphere.radius * std::cos(vertex.st[0]) * std::cos(vertex.st[1]),
+                  sphere.radius * std::sin(vertex.st[0]) * std::cos(vertex.st[1]),
+                 -sphere.radius * std::sin(vertex.st[1])};
     // dpdu may not be orthogonal to shading normal:
     // subtract the projection of shading_normal onto dpdu to make them orthogonal
     Vector3 tangent = normalize(

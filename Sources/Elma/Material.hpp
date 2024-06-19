@@ -7,6 +7,7 @@
 #include <optional>
 #include <variant>
 
+namespace elma {
 struct PathVertex;
 
 struct Lambertian
@@ -178,3 +179,5 @@ Real pdf_sample_bsdf(const Material& material,
 /// Return a texture from the material for debugging.
 /// If the material contains multiple textures, return an arbitrary one.
 TextureSpectrum get_texture(const Material& material);
+
+} // namespace elma

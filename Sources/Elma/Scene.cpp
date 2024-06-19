@@ -1,6 +1,8 @@
 #include "Scene.hpp"
 #include "TableDist.hpp"
 
+namespace elma {
+
 Scene::Scene(const RTCDevice& embree_device,
              const Camera& camera,
              const std::vector<Material>& materials,
@@ -74,3 +76,5 @@ Real light_pmf(const Scene& scene, int light_id)
 {
     return pmf(scene.light_dist, light_id);
 }
+
+} // namespace elma

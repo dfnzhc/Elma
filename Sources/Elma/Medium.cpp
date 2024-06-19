@@ -1,5 +1,6 @@
 #include "Medium.hpp"
 
+namespace elma {
 struct get_majorant_op
 {
     Spectrum operator()(const HomogeneousMedium& m);
@@ -41,3 +42,5 @@ Spectrum get_sigma_a(const Medium& medium, const Vector3& p)
 {
     return std::visit(get_sigma_a_op{p}, medium);
 }
+
+} // namespace elma

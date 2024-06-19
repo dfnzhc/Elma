@@ -4,6 +4,8 @@
 #include "Vector.hpp"
 #include <vector>
 
+namespace elma {
+
 // Numerical robust computation of angle between unit vectors
 inline Real unit_angle(const Vector3 &u, const Vector3 &v) {
     if (dot(u, v) < 0)
@@ -48,3 +50,5 @@ inline std::vector<Vector3> compute_normal(const std::vector<Vector3> &vertices,
     }
     return normals;
 }
+
+} // namespace elma

@@ -7,6 +7,7 @@
 #include <map>
 #include <variant>
 
+namespace elma {
 /// Can be replaced by a more advanced texture caching system,
 /// where we only load images from files when necessary.
 /// See OpenImageIO for example https://github.com/OpenImageIO/oiio
@@ -237,3 +238,5 @@ inline CheckerboardTexture<Real> make_checkerboard_float_texture(
 {
     return CheckerboardTexture<Real>{color0, color1, uscale, vscale, uoffset, voffset};
 }
+
+} // namespace elma

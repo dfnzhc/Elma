@@ -10,6 +10,8 @@
 
 #define ZSTREAM_BUFSIZE 32'768
 
+namespace elma {
+
 enum ETriMeshFlags
 {
     EHasNormals      = 0x0001,
@@ -268,3 +270,5 @@ TriangleMesh load_serialized(const fs::path& filename, int shape_index, const Ma
 
     return mesh;
 }
+
+} // namespace elma

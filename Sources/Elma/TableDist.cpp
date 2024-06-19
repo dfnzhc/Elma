@@ -1,5 +1,7 @@
 #include "TableDist.hpp"
 
+namespace elma {
+
 TableDist1D make_table_dist_1d(const std::vector<Real>& f)
 {
     std::vector<Real> pmf = f;
@@ -149,3 +151,5 @@ Real pdf(const TableDist2D& table, const Vector2& xy)
     Real pdf_x = table.pdf_rows[y * w + x];
     return pdf_y * pdf_x * w * h;
 }
+
+} // namespace elma

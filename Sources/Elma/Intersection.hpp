@@ -8,6 +8,7 @@
 
 #include <optional>
 
+namespace elma {
 struct Scene;
 
 /// An "PathVertex" represents a vertex of a light path.
@@ -46,3 +47,5 @@ bool occluded(const Scene& scene, const Ray& ray);
 /// Computes the emission at a path vertex v, with the viewing direction
 /// pointing outwards of the intersection.
 Spectrum emission(const PathVertex& v, const Vector3& view_dir, const Scene& scene);
+
+} // namespace elma

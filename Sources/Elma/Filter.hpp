@@ -4,6 +4,9 @@
 #include "Vector.hpp"
 #include <variant>
 
+
+namespace elma {
+
 // Many common open source renderers implement pixel filtering using
 // a "splatting" approach: they sample a point from a pixel, and then
 // splat the contribution to all nearby pixels overlapped with the
@@ -48,3 +51,5 @@ struct Gaussian
 using Filter = std::variant<Box, Tent, Gaussian>;
 
 Vector2 sample(const Filter& filter, const Vector2& rnd_param);
+
+} // namespace elma

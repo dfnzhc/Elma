@@ -1,5 +1,6 @@
 #pragma once
 
+namespace elma {
 // The simplest volumetric renderer:
 // single absorption only homogeneous volume
 // only handle directly visible light sources
@@ -74,3 +75,5 @@ Spectrum vol_path_tracing(const Scene& scene,
     // Homework 2: implememt this!
     return make_zero_spectrum();
 }
+
+} // namespace elma

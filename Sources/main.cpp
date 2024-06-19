@@ -8,6 +8,8 @@
 #include <thread>
 #include <vector>
 
+using namespace elma;
+
 int main(int argc, char* argv[])
 {
     if (argc <= 1) {

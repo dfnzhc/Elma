@@ -3,6 +3,7 @@
 #include "Elma.hpp"
 #include "Spectrum.hpp"
 
+namespace elma {
 /// A microfacet model assumes that the surface is composed of infinitely many little mirrors/glasses.
 /// The orientation of the mirrors determines the amount of lights reflected.
 /// The distribution of the orientation is determined empirically.
@@ -52,7 +53,7 @@ inline Real fresnel_dielectric(Real n_dot_i, Real eta)
         // total internal reflection
         return 1;
     }
-    Real n_dot_t = sqrt(n_dot_t_sq);
+    Real n_dot_t = std::sqrt(n_dot_t_sq);
     return fresnel_dielectric(fabs(n_dot_i), n_dot_t, eta);
 }
 
@@ -80,7 +81,7 @@ inline Real smith_masking_gtr2(const Vector3& v_local, Real roughness)
     Real alpha  = roughness * roughness;
     Real a2     = alpha * alpha;
     Vector3 v2  = v_local * v_local;
-    Real Lambda = (-1 + sqrt(1 + (v2.x * a2 + v2.y * a2) / v2.z)) / 2;
+    Real Lambda = (-1 + std::sqrt(1 + (v2.x * a2 + v2.y * a2) / v2.z)) / 2;
     return 1 / (1 + Lambda);
 }
 
@@ -99,15 +100,15 @@ inline Vector3 sample_visible_normals(const Vector3& local_dir_in, Real alpha, c
 
     // Parameterization of the projected area of a hemisphere.
     // First, sample a disk.
-    Real r   = sqrt(rnd_param.x);
+    Real r   = std::sqrt(rnd_param.x);
     Real phi = 2 * c_PI * rnd_param.y;
     Real t1  = r * cos(phi);
     Real t2  = r * sin(phi);
     // Vertically scale the position of a sample to account for the projection.
     Real s = (1 + hemi_dir_in.z) / 2;
-    t2     = (1 - s) * sqrt(1 - t1 * t1) + s * t2;
+    t2     = (1 - s) * std::sqrt(1 - t1 * t1) + s * t2;
     // Point in the disk space
-    Vector3 disk_N{t1, t2, sqrt(max(Real(0), 1 - t1 * t1 - t2 * t2))};
+    Vector3 disk_N{t1, t2, std::sqrt(max(Real(0), 1 - t1 * t1 - t2 * t2))};
 
     // Reprojection onto hemisphere -- we get our sampled normal in hemisphere space.
     Frame hemi_frame(hemi_dir_in);
@@ -116,3 +117,4 @@ inline Vector3 sample_visible_normals(const Vector3& local_dir_in, Real alpha, c
     // Transforming the normal back to the ellipsoid configuration
     return normalize(Vector3{alpha * hemi_N.x, alpha * hemi_N.y, max(Real(0), hemi_N.z)});
 }
+} // namespace elma

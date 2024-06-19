@@ -7,6 +7,7 @@
 #include <variant>
 #include <vector>
 
+namespace elma {
 /// For representing participating media data.
 /// Will be used in homework 2. Can think of this as a 3D texture.
 
@@ -173,3 +174,5 @@ template<typename T> GridVolume<T> load_volume_from_file(const fs::path& filenam
 template<> GridVolume<Real> load_volume_from_file(const fs::path& filename);
 
 template<> GridVolume<Spectrum> load_volume_from_file(const fs::path& filename);
+
+} // namespace elma

@@ -7,6 +7,8 @@
 
 // From https://github.com/mmp/pbrt-v3/blob/master/src/core/parallel.cpp
 
+namespace elma {
+
 class Barrier
 {
 public:
@@ -280,3 +282,5 @@ void parallel_cleanup()
     threads.erase(threads.begin(), threads.end());
     shutdownThreads = false;
 }
+
+} // namespace elma

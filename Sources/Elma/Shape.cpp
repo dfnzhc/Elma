@@ -4,6 +4,8 @@
 #include "Ray.hpp"
 #include <embree4/rtcore.h>
 
+namespace elma {
+
 struct register_embree_op
 {
     uint32_t operator()(const Sphere& sphere) const;
@@ -84,3 +86,5 @@ ShadingInfo compute_shading_info(const Shape& shape, const PathVertex& vertex)
 {
     return std::visit(compute_shading_info_op{vertex}, shape);
 }
+
+} // namespace elma

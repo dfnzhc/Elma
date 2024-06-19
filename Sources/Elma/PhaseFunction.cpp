@@ -1,5 +1,7 @@
 #include "PhaseFunction.hpp"
 
+namespace elma {
+
 struct eval_op
 {
     Spectrum operator()(const IsotropicPhase& p) const;
@@ -28,7 +30,7 @@ struct pdf_sample_phase_op
 };
 
 #include "PhaseFunctions/Isotropic.inl"
-#include "PhaseFunctions/Henyeygreenstein.inl"
+#include "PhaseFunctions/HenyeyGreenstein.inl"
 
 Spectrum eval(const PhaseFunction& phase_function, const Vector3& dir_in, const Vector3& dir_out)
 {
@@ -45,3 +47,5 @@ Real pdf_sample_phase(const PhaseFunction& phase_function, const Vector3& dir_in
 {
     return std::visit(pdf_sample_phase_op{dir_in, dir_out}, phase_function);
 }
+
+} // namespace elma

@@ -5,6 +5,7 @@
 #include "Volume.hpp"
 #include <variant>
 
+namespace elma {
 struct Scene;
 
 struct MediumBase
@@ -33,3 +34,5 @@ inline PhaseFunction get_phase_function(const Medium& medium)
 {
     return std::visit([&](const auto& m) { return m.phase_function; }, medium);
 }
+
+} // namespace elma

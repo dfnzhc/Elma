@@ -8,6 +8,8 @@
 #include "ProgressReporter.hpp"
 #include "Scene.hpp"
 
+namespace elma {
+
 /// Render auxiliary buffers e.g., depth.
 Image3 aux_render(const Scene& scene)
 {
@@ -189,3 +191,5 @@ Image3 render(const Scene& scene)
         return Image3();
     }
 }
+
+} // namespace elma

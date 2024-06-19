@@ -36,7 +36,7 @@ Real pdf_point_on_light_op::operator()(const Envmap& light) const
         uv[0] += 1;
     }
     Real cos_elevation = local_dir.y;
-    Real sin_elevation = sqrt(std::clamp(1 - cos_elevation * cos_elevation, Real(0), Real(1)));
+    Real sin_elevation = std::sqrt(std::clamp(1 - cos_elevation * cos_elevation, Real(0), Real(1)));
     if (sin_elevation <= 0) {
         // degenerate
         return 0;
@@ -52,8 +52,8 @@ Spectrum emission_op::operator()(const Envmap& light) const
     // We then transform the direction to the local Cartesian coordinates.
     Vector3 local_dir = xform_vector(light.to_local, -view_dir);
     // Convert the Cartesian coordinates to the spherical coordinates.
-    Vector2 uv{atan2(local_dir[0], -local_dir[2]) * c_INVTWOPI,
-               acos(std::clamp(local_dir[1], Real(-1), Real(1))) * c_INVPI};
+    Vector2 uv{std::atan2(local_dir[0], -local_dir[2]) * c_INVTWOPI,
+               std::acos(std::clamp(local_dir[1], Real(-1), Real(1))) * c_INVPI};
     // atan2 returns -pi to pi, we map [-pi, 0] to [pi, 2pi]
     if (uv[0] < 0) {
         uv[0] += 1;
@@ -67,11 +67,11 @@ Spectrum emission_op::operator()(const Envmap& light) const
     Vector3 w  = local_dir;
     Real dudwx = -w.z / (w.x * w.x + w.z * w.z);
     Real dudwz = w.x / (w.x * w.x + w.z * w.z);
-    Real dvdwy = -1 / sqrt(std::max(1 - w.y * w.y, Real(0)));
+    Real dvdwy = -1 / std::sqrt(std::max(1 - w.y * w.y, Real(0)));
     // We only want to know the length of dudw & dvdw
     // The local coordinate transformation is length preserving,
     // so we don't need to differentiate through it.
-    Real footprint = min(sqrt(dudwx * dudwx + dudwz * dudwz), dvdwy);
+    Real footprint = std::min(std::sqrt(dudwx * dudwx + dudwz * dudwz), dvdwy);
 
     return eval(light.values, uv, footprint, scene.texture_pool) * light.scale;
 }
@@ -92,7 +92,7 @@ void init_sampling_dist_op::operator()(Envmap& light) const
             // unbiased, as we can interpolate at a position of a black pixel
             // and get a non-zero contribution.
             Real v             = (y + Real(0.5)) / Real(h);
-            Real sin_elevation = sin(c_PI * v);
+            Real sin_elevation = std::sin(c_PI * v);
             for (int x = 0; x < w; x++) {
                 Real u = (x + Real(0.5)) / Real(w);
                 f[i++] = luminance(lookup(mipmap, u, v, 0)) * sin_elevation;

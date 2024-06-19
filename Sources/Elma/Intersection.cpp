@@ -4,6 +4,8 @@
 #include "Scene.hpp"
 #include <embree4/rtcore.h>
 
+namespace elma {
+
 std::optional<PathVertex> intersect(const Scene& scene, const Ray& ray, const RayDifferential& ray_diff)
 {
     RTCIntersectArguments rtc_args;
@@ -98,3 +100,5 @@ Spectrum emission(const PathVertex& v, const Vector3& view_dir, const Scene& sce
     const Light& light = scene.lights[light_id];
     return emission(light, view_dir, v.uv_screen_size, PointAndNormal{v.position, v.geometric_normal}, scene);
 }
+
+} // namespace elma

@@ -12,6 +12,8 @@
 #include <limits>
 #include <algorithm>
 
+namespace elma {
+
 // We use double for most of our computation.
 // Rendering is usually done in single precision Reals.
 // However, lajolla is a educational renderer with does not
@@ -83,3 +85,5 @@ inline Real degrees(const Real rad)
 {
     return (Real(180) / c_PI) * rad;
 }
+
+} // namespace elma

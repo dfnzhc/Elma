@@ -3,6 +3,7 @@
 #include "Elma.hpp"
 #include <mutex>
 
+namespace elma {
 /// For printing how much work is done for an operation.
 /// The operations are thread-safe so we can safely use this in multi-thread environment.
 class ProgressReporter
@@ -39,3 +40,5 @@ private:
     uint64_t work_done;
     std::mutex mutex;
 };
+
+} // namespace elma

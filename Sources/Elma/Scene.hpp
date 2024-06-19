@@ -11,6 +11,7 @@
 #include <memory>
 #include <vector>
 
+namespace elma {
 enum class Integrator
 {
     Depth,
@@ -112,3 +113,5 @@ inline Real get_intersection_epsilon(const Scene& scene)
 {
     return min(scene.bounds.radius * Real(1e-5), Real(0.01));
 }
+
+} // namespace elma

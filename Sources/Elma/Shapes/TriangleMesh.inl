@@ -31,7 +31,7 @@ PointAndNormal sample_point_on_shape_op::operator()(const TriangleMesh &mesh) co
     Vector3 e1 = v1 - v0;
     Vector3 e2 = v2 - v0;
     // https://pbr-book.org/3ed-2018/Monte_Carlo_Integration/2D_Sampling_with_Multidimensional_Transformations#SamplingaTriangle
-    Real a = sqrt(std::clamp(uv[0], Real(0), Real(1)));
+    Real a = std::sqrt(std::clamp(uv[0], Real(0), Real(1)));
     Real b1 = 1 - a;
     Real b2 = a * uv[1];
     Vector3 geometric_normal = normalize(cross(e1, e2));

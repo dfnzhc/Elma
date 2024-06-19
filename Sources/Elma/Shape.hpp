@@ -8,6 +8,7 @@
 #include <variant>
 #include <vector>
 
+namespace elma {
 struct PointAndNormal;
 struct PathVertex;
 
@@ -119,3 +120,5 @@ inline bool is_light(const Shape& shape)
 {
     return get_area_light_id(shape) >= 0;
 }
+
+} // namespace elma

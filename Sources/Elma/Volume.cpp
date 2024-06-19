@@ -3,6 +3,8 @@
 #include <fstream>
 #include <variant>
 
+namespace elma {
+
 std::variant<GridVolume<Real>, GridVolume<Vector3>> load_volume(const fs::path& filename, int target_channel)
 {
     // code from https://github.com/mitsuba-renderer/mitsuba/blob/master/src/volume/gridvolume.cpp#L217
@@ -109,3 +111,5 @@ template<> GridVolume<Vector3> load_volume_from_file(const fs::path& filename)
 {
     return std::get<GridVolume<Vector3>>(load_volume(filename, 3));
 }
+
+} // namespace elma

@@ -4,6 +4,9 @@
 #include <stdexcept>
 #include <string>
 
+namespace elma {
+
+
 // http://stackoverflow.com/questions/348833/how-to-know-the-exact-line-of-code-where-where-an-exception-has-been-caused
 class fl_exception : public std::runtime_error
 {
@@ -23,3 +26,5 @@ public:
 };
 
 #define Error(arg) throw fl_exception(arg, __FILE__, __LINE__);
+
+} // namespace elma

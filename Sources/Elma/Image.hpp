@@ -6,6 +6,8 @@
 #include <cstring>
 #include <vector>
 
+namespace elma {
+
 /// A N-channel image stored in a contiguous vector
 /// The storage format is HWC -- outer dimension is height
 /// then width, then channels.
@@ -63,3 +65,5 @@ inline Image1 to_image1(const Image3& img)
     std::transform(img.data.cbegin(), img.data.cend(), out.data.begin(), [](const Vector3& v) { return average(v); });
     return out;
 }
+
+} // namespace elma

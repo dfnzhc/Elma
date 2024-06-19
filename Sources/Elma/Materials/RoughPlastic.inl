@@ -40,10 +40,10 @@ Spectrum eval_op::operator()(const RoughPlastic& bsdf) const
     // both incoming and outgoing directions (dir_out & dir_in).
     // However, since they are related through the Snell-Descartes law,
     // we only need one of them.
-    Real F_o = fresnel_dielectric(dot(half_vector, dir_out), bsdf.eta); // F_o is the reflection percentage.
-    Real D   = GTR2(n_dot_h, roughness); // "Generalized Trowbridge Reitz", GTR2 is equivalent to GGX.
-    Real G   = smith_masking_gtr2(to_local(frame, dir_in), roughness) *
-             smith_masking_gtr2(to_local(frame, dir_out), roughness);
+    Real F_o = elma::fresnel_dielectric(dot(half_vector, dir_out), bsdf.eta); // F_o is the reflection percentage.
+    Real D   = elma::GTR2(n_dot_h, roughness); // "Generalized Trowbridge Reitz", GTR2 is equivalent to GGX.
+    Real G   = elma::smith_masking_gtr2(to_local(frame, dir_in), roughness) *
+             elma::smith_masking_gtr2(to_local(frame, dir_out), roughness);
 
     Spectrum spec_contrib = Ks * (G * F_o * D) / (4 * n_dot_in * n_dot_out);
 
@@ -51,7 +51,7 @@ Spectrum eval_op::operator()(const RoughPlastic& bsdf) const
     // In order to reflect from the diffuse layer,
     // the photon needs to bounce through the dielectric layers twice.
     // The transmittance is computed by 1 - fresnel.
-    Real F_i = fresnel_dielectric(dot(half_vector, dir_in), bsdf.eta);
+    Real F_i = elma::fresnel_dielectric(dot(half_vector, dir_in), bsdf.eta);
     // Multiplying with Fresnels leads to an overly dark appearance at the
     // object boundaries. Disney BRDF proposes a fix to this -- we will implement this in problem set 1.
     Spectrum diffuse_contrib = Kd * (Real(1) - F_o) * (Real(1) - F_i) / c_PI;
@@ -95,8 +95,8 @@ Real pdf_sample_bsdf_op::operator()(const RoughPlastic& bsdf) const
     // "Sampling the GGX Distribution of Visible Normals"
     // https://jcgt.org/published/0007/04/01/
     // this importance samples smith_masking(cos_theta_in) * GTR2(cos_theta_h, roughness) * cos_theta_out
-    Real G = smith_masking_gtr2(to_local(frame, dir_in), roughness);
-    Real D = GTR2(n_dot_h, roughness);
+    Real G = elma::smith_masking_gtr2(to_local(frame, dir_in), roughness);
+    Real D = elma::GTR2(n_dot_h, roughness);
     // (4 * cos_theta_v) is the Jacobian of the reflectiokn
     spec_prob *= (G * D) / (4 * n_dot_in);
     // For the diffuse lobe, we importance sample cos_theta_out
@@ -133,7 +133,7 @@ std::optional<BSDFSampleRecord> sample_bsdf_op::operator()(const RoughPlastic& b
         // Clamp roughness to avoid numerical issues.
         roughness                  = std::clamp(roughness, Real(0.01), Real(1));
         Real alpha                 = roughness * roughness;
-        Vector3 local_micro_normal = sample_visible_normals(local_dir_in, alpha, rnd_param_uv);
+        Vector3 local_micro_normal = elma::sample_visible_normals(local_dir_in, alpha, rnd_param_uv);
 
         // Transform the micro normal to world space
         Vector3 half_vector = to_world(frame, local_micro_normal);

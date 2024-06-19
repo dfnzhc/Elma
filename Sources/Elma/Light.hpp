@@ -9,6 +9,7 @@
 #include "Vector.hpp"
 #include <variant>
 
+namespace elma {
 struct Scene;
 
 /// An area light attached on a shape to make it emit lights.
@@ -72,3 +73,5 @@ inline bool is_envmap(const Light& light)
 {
     return std::get_if<Envmap>(&light) != nullptr;
 }
+
+} // namespace elma

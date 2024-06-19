@@ -26,16 +26,16 @@ std::optional<Vector3> sample_phase_function_op::operator()(const HenyeyGreenste
     // sampling when that happens
     if (fabs(p.g) < Real(1e-3)) { // the constant was taken from pbrt
         Real z   = 1 - 2 * rnd_param.x;
-        Real r   = sqrt(fmax(Real(0), 1 - z * z));
+        Real r   = std::sqrt(std::fmax(Real(0), 1 - z * z));
         Real phi = 2 * c_PI * rnd_param.y;
         return Vector3{r * cos(phi), r * sin(phi), z};
     }
     else {
         Real tmp           = (p.g * p.g - 1) / (2 * rnd_param.x * p.g - (p.g + 1));
         Real cos_elevation = (tmp * tmp - (1 + p.g * p.g)) / (2 * p.g);
-        Real sin_elevation = sqrt(max(1 - cos_elevation * cos_elevation, Real(0)));
+        Real sin_elevation = std::sqrt(max(1 - cos_elevation * cos_elevation, Real(0)));
         Real azimuth       = 2 * c_PI * rnd_param.y;
-        Frame frame(dir_in);
+        elma::Frame frame(dir_in);
         return to_world(frame, Vector3{sin_elevation * cos(azimuth), sin_elevation * sin(azimuth), cos_elevation});
     }
 }

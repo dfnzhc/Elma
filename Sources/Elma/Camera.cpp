@@ -4,6 +4,9 @@
 
 #include <cmath>
 
+namespace elma {
+
+
 Camera::Camera(const Matrix4x4& cam_to_world, Real fov, int width, int height, const Filter& filter, int medium_id)
 : cam_to_world(cam_to_world),
   world_to_cam(inverse(cam_to_world)),
@@ -42,3 +45,5 @@ Ray sample_primary(const Camera& camera, const Vector2& screen_pos)
                Real(0),
                infinity<Real>()};
 }
+
+} // namespace elma

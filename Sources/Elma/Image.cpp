@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <fstream>
 
+namespace elma {
+
 using std::string;
 using std::vector;
 
@@ -173,3 +175,5 @@ void imwrite(const fs::path& filename, const Image3& image)
         }
     }
 }
+
+} // namespace elma

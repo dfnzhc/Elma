@@ -2,6 +2,7 @@
 
 #include "Elma.hpp"
 
+namespace elma {
 constexpr int c_max_mipmap_levels = 8;
 
 template<typename T> struct Mipmap
@@ -86,3 +87,5 @@ template<typename T> inline T lookup(const Mipmap<T>& mipmap, Real u, Real v, Re
 
 using Mipmap1 = Mipmap<Real>;
 using Mipmap3 = Mipmap<Vector3>;
+
+} // namespace elma

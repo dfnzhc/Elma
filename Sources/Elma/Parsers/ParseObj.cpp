@@ -8,6 +8,8 @@
 #include <regex>
 #include <string>
 
+namespace elma {
+
 // https://stackoverflow.com/questions/216823/how-to-trim-a-stdstring
 // trim from start
 static inline std::string& ltrim(std::string& s)
@@ -164,3 +166,5 @@ TriangleMesh parse_obj(const fs::path& filename, const Matrix4x4& to_world)
 
     return mesh;
 }
+
+} // namespace elma

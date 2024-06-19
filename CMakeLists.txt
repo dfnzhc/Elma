@@ -36,7 +36,7 @@ link_libraries(${EMBREE_LIBRARY})
 include_directories(${CMAKE_SOURCE_DIR}/Sources/Elma)
 file(GLOB_RECURSE SOURCE_FILES Sources/Elma/**.hpp Sources/Elma/**.inl Sources/Elma/**.cpp Sources/Elma/**.h Elma/**.c)
 
-add_library(ElmaLib STATIC 
+add_library(ElmaLib STATIC
         ${SOURCE_FILES}
         ${EXTERNAL_FILES}
 )

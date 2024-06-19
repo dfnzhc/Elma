@@ -2,6 +2,7 @@
 
 #include "Vector.hpp"
 
+namespace elma {
 /// Convienent class used for storing a point on a surface.
 /// Sometimes we will also use it for storing an infinitely far points (environment maps).
 /// In that case the normal is the direction of the infinitely far point pointing towards the origin,
@@ -11,3 +12,5 @@ struct PointAndNormal
     Vector3 position;
     Vector3 normal;
 };
+
+} // namespace elma

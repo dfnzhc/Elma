@@ -4,6 +4,7 @@
 #include "Vector.hpp"
 #include <vector>
 
+namespace elma {
 /// TableDist1D stores a tabular discrete distribution
 /// that we can sample from using the functions below.
 /// Useful for light source sampling.
@@ -47,3 +48,5 @@ Vector2 sample(const TableDist2D& table, const Vector2& rnd_param);
 
 /// Probability density of the sampling procedure above.
 Real pdf(const TableDist2D& table, const Vector2& xy);
+
+} // namespace elma

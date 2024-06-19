@@ -3,6 +3,7 @@
 #include "Elma.hpp"
 #include "Vector.hpp"
 
+namespace elma {
 struct PathVertex;
 
 /// Your typical Ray data structure!
@@ -65,3 +66,5 @@ inline Real refract(const RayDifferential& r, Real mean_curvature, Real eta, Rea
     Real diff_spread = Real(0.2);
     return fmax(spec_spread * (1 - roughness) + diff_spread * roughness, Real(0));
 }
+
+} // namespace elma

@@ -6,6 +6,8 @@
 #include "Vector.hpp"
 #include "Ray.hpp"
 
+namespace elma {
+
 /// Currently we only support a pinhole perspective camera
 struct Camera
 {
@@ -29,3 +31,5 @@ struct Camera
 /// Given screen position in [0, 1] x [0, 1],
 /// generate a camera ray.
 Ray sample_primary(const Camera& camera, const Vector2& screen_pos);
+
+} // namespace elma

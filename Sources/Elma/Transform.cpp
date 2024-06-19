@@ -1,5 +1,7 @@
 #include "Transform.hpp"
 
+namespace elma {
+
 /// Much of the code is taken from pbrt https://github.com/mmp/pbrt-v3/tree/master/src
 
 Matrix4x4 translate(const Vector3& delta)
@@ -111,3 +113,5 @@ Vector3 xform_normal(const Matrix4x4& inv_xform, const Vector3& n)
                              inv_xform(0, 1) * n[0] + inv_xform(1, 1) * n[1] + inv_xform(2, 1) * n[2],
                              inv_xform(0, 2) * n[0] + inv_xform(1, 2) * n[1] + inv_xform(2, 2) * n[2]});
 }
+
+} // namespace elma

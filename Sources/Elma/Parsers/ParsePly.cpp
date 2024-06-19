@@ -6,6 +6,8 @@
 
 #include <fstream>
 
+namespace elma {
+
 TriangleMesh parse_ply(const fs::path& filename, const Matrix4x4& to_world)
 {
     std::ifstream ifs(filename, std::ios::binary);
@@ -122,3 +124,5 @@ TriangleMesh parse_ply(const fs::path& filename, const Matrix4x4& to_world)
 
     return mesh;
 }
+
+} // namespace elma

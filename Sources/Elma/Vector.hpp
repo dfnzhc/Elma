@@ -1,8 +1,9 @@
 #pragma once
 
 #include "Elma.hpp"
-#include <math.h>
 #include <cmath>
+
+namespace elma {
 
 template<typename T> struct TVector2
 {
@@ -210,7 +211,7 @@ template<typename T> inline T distance_squared(const TVector3<T>& v0, const TVec
 
 template<typename T> inline T distance(const TVector3<T>& v0, const TVector3<T>& v1)
 {
-    return sqrt(distance_squared(v0, v1));
+    return std::sqrt(distance_squared(v0, v1));
 }
 
 template<typename T> inline T length_squared(const TVector3<T>& v)
@@ -220,7 +221,7 @@ template<typename T> inline T length_squared(const TVector3<T>& v)
 
 template<typename T> inline T length(const TVector3<T>& v)
 {
-    return sqrt(length_squared(v));
+    return std::sqrt(length_squared(v));
 }
 
 template<typename T> inline TVector3<T> normalize(const TVector3<T>& v0)
@@ -241,32 +242,32 @@ template<typename T> inline T average(const TVector3<T>& v)
 
 template<typename T> inline T max(const TVector3<T>& v)
 {
-    return max(max(v.x, v.y), v.z);
+    return std::max(std::max(v.x, v.y), v.z);
 }
 
 template<typename T> inline TVector3<T> max(const TVector3<T>& v0, const TVector3<T>& v1)
 {
-    return TVector3<T>{max(v0.x, v1.x), max(v0.y, v1.y), max(v0.z, v1.z)};
+    return TVector3<T>{std::max(v0.x, v1.x), std::max(v0.y, v1.y), std::max(v0.z, v1.z)};
 }
 
 template<typename T> inline bool isnan(const TVector2<T>& v)
 {
-    return isnan(v[0]) || isnan(v[1]);
+    return std::isnan(v[0]) || std::isnan(v[1]);
 }
 
 template<typename T> inline bool isnan(const TVector3<T>& v)
 {
-    return isnan(v[0]) || isnan(v[1]) || isnan(v[2]);
+    return std::isnan(v[0]) || std::isnan(v[1]) || std::isnan(v[2]);
 }
 
 template<typename T> inline bool isfinite(const TVector2<T>& v)
 {
-    return isfinite(v[0]) || isfinite(v[1]);
+    return std::isfinite(v[0]) || std::isfinite(v[1]);
 }
 
 template<typename T> inline bool isfinite(const TVector3<T>& v)
 {
-    return isfinite(v[0]) || isfinite(v[1]) || isfinite(v[2]);
+    return std::isfinite(v[0]) || std::isfinite(v[1]) || std::isfinite(v[2]);
 }
 
 template<typename T> inline std::ostream& operator<<(std::ostream& os, const TVector2<T>& v)
@@ -278,3 +279,5 @@ template<typename T> inline std::ostream& operator<<(std::ostream& os, const TVe
 {
     return os << "(" << v[0] << ", " << v[1] << ", " << v[2] << ")";
 }
+
+} // namespace elma

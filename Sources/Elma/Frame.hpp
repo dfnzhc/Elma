@@ -3,6 +3,8 @@
 #include "Elma.hpp"
 #include "Vector.hpp"
 
+namespace elma {
+
 /// Given a vector n, outputs two vectors such that all three vectors are
 /// orthogonal to each other.
 /// The approach here is based on Frisvad's paper
@@ -59,3 +61,5 @@ inline std::ostream& operator<<(std::ostream& os, const Frame& f)
 {
     return os << "Frame(" << f[0] << ", " << f[1] << ", " << f[2] << ")";
 }
+
+} // namespace elma
