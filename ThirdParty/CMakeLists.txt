@@ -9,6 +9,9 @@ set(EXTERNAL_FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/stb_image.h
         ${CMAKE_CURRENT_SOURCE_DIR}/tinyexr.h
         ${CMAKE_CURRENT_SOURCE_DIR}/tinyply.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/glad/include/glad/glad.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/glad/include/KHR/khrplatform.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/glad/src/glad.c
         PARENT_SCOPE
 )
 
