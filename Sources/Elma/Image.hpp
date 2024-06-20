@@ -36,6 +36,7 @@ template<typename T> struct Image
 
 using Image1 = Image<Real>;
 using Image3 = Image<Vector3>;
+using Image3f = Image<Vector3f>;
 
 /// Read from an 1 channel image. If the image is not actually
 /// single channel, the first channel is used.

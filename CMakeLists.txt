@@ -27,7 +27,6 @@ set(ELMA_LIBRARY_OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin)
 
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
-find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 
 add_subdirectory(ThirdParty)
@@ -35,7 +34,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/glad/include)
 include_directories(${EMBREE_INCLUDE_PATH})
 
-link_libraries(${EMBREE_LIBRARY} glfw glm::glm)
+link_libraries(${EMBREE_LIBRARY} glm::glm nanogui)
 
 include_directories(${CMAKE_SOURCE_DIR}/Sources/Elma)
 file(GLOB_RECURSE SOURCE_FILES Sources/Elma/**.hpp Sources/Elma/**.inl Sources/Elma/**.cpp Sources/Elma/**.h Elma/**.c)
@@ -50,8 +49,12 @@ target_compile_definitions(ElmaLib
         GLM_ENABLE_EXPERIMENTAL
 )
 
+add_custom_target(CopyDataFolder ALL
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/Data ${ELMA_RUNTIME_OUTPUT_DIR}/Data)
+
 add_executable(Elma Sources/main.cpp)
 target_link_libraries(Elma ElmaLib) #  Threads::Threads
+add_dependencies(Elma CopyDataFolder)
 
 set_target_properties(ElmaLib PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${ELMA_RUNTIME_OUTPUT_DIR}
@@ -67,11 +70,6 @@ if (MSVC)
             COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/embree/bin"
             ${ELMA_RUNTIME_OUTPUT_DIR})
-
-    add_custom_command(TARGET Elma POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_CURRENT_SOURCE_DIR}/Data"
-            ${ELMA_RUNTIME_OUTPUT_DIR}/Data)
 endif ()
 
 enable_testing()

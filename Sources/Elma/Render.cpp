@@ -11,7 +11,7 @@
 namespace elma {
 
 /// Render auxiliary buffers e.g., depth.
-Image3 aux_render(const Scene& scene)
+Image3 aux_render(const Scene& scene, Image3f& viewImage)
 {
     int w = scene.camera.width, h = scene.camera.height;
     Image3 img(w, h);
@@ -65,11 +65,12 @@ Image3 aux_render(const Scene& scene)
                                 color      = Vector3{level, level, level};
                             }
                         }
-                        img(x, y) = color;
+                        img(x, y)       = color;
                     }
                     else {
-                        img(x, y) = Vector3{0, 0, 0};
+                        img(x, y)       = Vector3{0, 0, 0};
                     }
+                    viewImage(x, y) = Vector3f(img(x, y) * 255.99);
                 }
             }
         },
@@ -78,7 +79,7 @@ Image3 aux_render(const Scene& scene)
     return img;
 }
 
-Image3 path_render(const Scene& scene)
+Image3 path_render(const Scene& scene, Image3f& viewImage)
 {
     int w = scene.camera.width, h = scene.camera.height;
     Image3 img(w, h);
@@ -103,7 +104,8 @@ Image3 path_render(const Scene& scene)
                     for (int s = 0; s < spp; s++) {
                         radiance += path_tracing(scene, x, y, rng);
                     }
-                    img(x, y) = radiance / Real(spp);
+                    img(x, y)       = radiance / Real(spp);
+                    viewImage(x, y) = Vector3f(img(x, y) * 255.99);
                 }
             }
             reporter.update(1);
@@ -113,7 +115,7 @@ Image3 path_render(const Scene& scene)
     return img;
 }
 
-Image3 vol_path_render(const Scene& scene)
+Image3 vol_path_render(const Scene& scene, Image3f& viewImage)
 {
     int w = scene.camera.width, h = scene.camera.height;
     Image3 img(w, h);
@@ -162,7 +164,8 @@ Image3 vol_path_render(const Scene& scene)
                             radiance += L;
                         }
                     }
-                    img(x, y) = radiance / Real(spp);
+                    img(x, y)       = radiance / Real(spp);
+                    viewImage(x, y) = Vector3f(img(x, y) * 255.99);
                 }
             }
             reporter.update(1);
@@ -172,19 +175,19 @@ Image3 vol_path_render(const Scene& scene)
     return img;
 }
 
-Image3 render(const Scene& scene)
+Image3 render(const Scene& scene, Image3f& viewImage)
 {
     if (scene.options.integrator == Integrator::Depth || scene.options.integrator == Integrator::ShadingNormal ||
         scene.options.integrator == Integrator::MeanCurvature ||
         scene.options.integrator == Integrator::RayDifferential || scene.options.integrator == Integrator::MipmapLevel)
     {
-        return aux_render(scene);
+        return aux_render(scene, viewImage);
     }
     else if (scene.options.integrator == Integrator::Path) {
-        return path_render(scene);
+        return path_render(scene, viewImage);
     }
     else if (scene.options.integrator == Integrator::VolPath) {
-        return vol_path_render(scene);
+        return vol_path_render(scene, viewImage);
     }
     else {
         assert(false);
