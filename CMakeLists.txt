@@ -28,13 +28,14 @@ set(ELMA_LIBRARY_OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 find_package(glm CONFIG REQUIRED)
+find_package(glfw3 CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 
 add_subdirectory(ThirdParty)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/glad/include)
 include_directories(${EMBREE_INCLUDE_PATH})
 
-link_libraries(${EMBREE_LIBRARY} glm::glm nanogui)
+link_libraries(${EMBREE_LIBRARY} glm::glm glfw imgui::imgui)
 
 include_directories(${CMAKE_SOURCE_DIR}/Sources/Elma)
 file(GLOB_RECURSE SOURCE_FILES Sources/Elma/**.hpp Sources/Elma/**.inl Sources/Elma/**.cpp Sources/Elma/**.h Elma/**.c)
@@ -42,6 +43,7 @@ file(GLOB_RECURSE SOURCE_FILES Sources/Elma/**.hpp Sources/Elma/**.inl Sources/E
 add_library(ElmaLib STATIC
         ${SOURCE_FILES}
         ${EXTERNAL_FILES}
+        ${GLAD_FILES}
 )
 
 target_compile_definitions(ElmaLib

@@ -12,12 +12,11 @@ set(EXTERNAL_FILES
         PARENT_SCOPE
 )
 
-set(NANOGUI_BUILD_EXAMPLES OFF)
-add_subdirectory(nanogui)
-
-set_target_properties(nanogui PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${ELMA_RUNTIME_OUTPUT_DIR}
-        LIBRARY_OUTPUT_DIRECTORY ${ELMA_LIBRARY_OUTPUT_DIR}
+set(GLAD_FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/glad/include/glad/glad.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/glad/include/KHR/khrplatform.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/glad/src/glad.c
+        PARENT_SCOPE
 )
 
 #set(THREADS_PREFER_PTHREAD_FLAG ON)
