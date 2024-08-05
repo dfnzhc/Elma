@@ -61,6 +61,7 @@ using Vector3  = TVector3<Real>;
 using Vector4f = TVector4<float>;
 using Vector4d = TVector4<double>;
 using Vector4  = TVector4<Real>;
+using Vector4u = TVector4<uint8_t>;
 
 template<typename T> inline TVector2<T> operator+(const TVector2<T>& v0, const TVector2<T>& v1)
 {

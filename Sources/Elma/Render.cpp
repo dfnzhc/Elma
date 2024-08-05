@@ -11,7 +11,7 @@
 namespace elma {
 
 /// Render auxiliary buffers e.g., depth.
-Image3 aux_render(const Scene& scene, Image3f& viewImage)
+Image3 aux_render(const Scene& scene)
 {
     int w = scene.camera.width, h = scene.camera.height;
     Image3 img(w, h);
@@ -65,12 +65,11 @@ Image3 aux_render(const Scene& scene, Image3f& viewImage)
                                 color      = Vector3{level, level, level};
                             }
                         }
-                        img(x, y)       = color;
+                        img(x, y) = color;
                     }
                     else {
-                        img(x, y)       = Vector3{0, 0, 0};
+                        img(x, y) = Vector3{0, 0, 0};
                     }
-                    viewImage(x, y) = Vector3f(img(x, y) * 255.99);
                 }
             }
         },
@@ -79,7 +78,7 @@ Image3 aux_render(const Scene& scene, Image3f& viewImage)
     return img;
 }
 
-Image3 path_render(const Scene& scene, Image3f& viewImage)
+Image3 path_render(const Scene& scene)
 {
     int w = scene.camera.width, h = scene.camera.height;
     Image3 img(w, h);
@@ -87,12 +86,13 @@ Image3 path_render(const Scene& scene, Image3f& viewImage)
     constexpr int tile_size = 16;
     int num_tiles_x         = (w + tile_size - 1) / tile_size;
     int num_tiles_y         = (h + tile_size - 1) / tile_size;
+    int num_acc             = scene.options.accumulate_count;
 
     ProgressReporter reporter(num_tiles_x * num_tiles_y);
     parallel_for(
         [&](const Vector2i& tile) {
             // Use a different rng stream for each thread.
-            pcg32_state rng = init_pcg32(tile[1] * num_tiles_x + tile[0]);
+            pcg32_state rng = init_pcg32(tile[1] * num_tiles_x + tile[0] + num_acc);
             int x0          = tile[0] * tile_size;
             int x1          = min(x0 + tile_size, w);
             int y0          = tile[1] * tile_size;
@@ -104,8 +104,7 @@ Image3 path_render(const Scene& scene, Image3f& viewImage)
                     for (int s = 0; s < spp; s++) {
                         radiance += path_tracing(scene, x, y, rng);
                     }
-                    img(x, y)       = radiance / Real(spp);
-                    viewImage(x, y) = Vector3f(img(x, y) * 255.99);
+                    img(x, y) = radiance / Real(spp);
                 }
             }
             reporter.update(1);
@@ -115,7 +114,7 @@ Image3 path_render(const Scene& scene, Image3f& viewImage)
     return img;
 }
 
-Image3 vol_path_render(const Scene& scene, Image3f& viewImage)
+Image3 vol_path_render(const Scene& scene)
 {
     int w = scene.camera.width, h = scene.camera.height;
     Image3 img(w, h);
@@ -164,8 +163,7 @@ Image3 vol_path_render(const Scene& scene, Image3f& viewImage)
                             radiance += L;
                         }
                     }
-                    img(x, y)       = radiance / Real(spp);
-                    viewImage(x, y) = Vector3f(img(x, y) * 255.99);
+                    img(x, y) = radiance / Real(spp);
                 }
             }
             reporter.update(1);
@@ -175,19 +173,19 @@ Image3 vol_path_render(const Scene& scene, Image3f& viewImage)
     return img;
 }
 
-Image3 render(const Scene& scene, Image3f& viewImage)
+Image3 render(const Scene& scene)
 {
     if (scene.options.integrator == Integrator::Depth || scene.options.integrator == Integrator::ShadingNormal ||
         scene.options.integrator == Integrator::MeanCurvature ||
         scene.options.integrator == Integrator::RayDifferential || scene.options.integrator == Integrator::MipmapLevel)
     {
-        return aux_render(scene, viewImage);
+        return aux_render(scene);
     }
     else if (scene.options.integrator == Integrator::Path) {
-        return path_render(scene, viewImage);
+        return path_render(scene);
     }
     else if (scene.options.integrator == Integrator::VolPath) {
-        return vol_path_render(scene, viewImage);
+        return vol_path_render(scene);
     }
     else {
         assert(false);

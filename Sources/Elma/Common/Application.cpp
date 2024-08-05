@@ -7,6 +7,14 @@
 
 #include "./Application.hpp"
 
+#include "Parsers/ParseScene.hpp"
+#include "Parallel.hpp"
+#include "Image.hpp"
+#include "Render.hpp"
+#include <embree4/rtcore.h>
+#include <memory>
+#include "Timer.hpp"
+
 #include <imgui.h>
 #include "./imgui_impl_opengl3.h"
 #include "./imgui_impl_glfw.h"
@@ -15,27 +23,62 @@
 
 using namespace elma;
 
+namespace {
+
+RTCDevice embreeDevice;
+std::unique_ptr<Scene> scene = nullptr;
+std::unique_ptr<Timer> timer = nullptr;
+
+struct RenderRecords
+{
+    Image3 acc;
+    double accCount;
+    Image4f display;
+};
+
+RenderRecords renderRec;
+
+} // namespace
+
 Application::Application(const AppConfig& config)
 {
     LogInfo("Nova 开始运行...");
 
-    _showUI  = config.showUI;
-    _vsyncOn = config.windowDesc.enableVSync;
-
     /// 创建初始化各种部件
-    if (!config.headless) {
-        auto windowDesc = config.windowDesc;
 
-        // Create the window
-        _pWindow = Window::Create(windowDesc, this);
-        _pWindow->setWindowIcon(std::filesystem::current_path() / "Data/Fairy-Tale-Castle-Princess.ico");
+    embreeDevice = rtcNewDevice(nullptr);
+    parallel_init(config.numThreads);
+
+    timer = std::make_unique<Timer>();
+    {
+        tick(*timer);
+        LogInfo("解析并构造场景 '{}'...", config.inputSceneFilename);
+        scene = parse_scene(config.inputSceneFilename, embreeDevice);
+        LogInfo("场景构造完成，花费 '{}' 秒", tick(*timer));
     }
+
+    scene->options.samples_per_pixel = 1;
+
+    auto windowDesc   = config.windowDesc;
+    windowDesc.width  = scene->camera.width;
+    windowDesc.height = scene->camera.height;
+
+    // Create the window
+    _pWindow = Window::Create(windowDesc, this);
+    _pWindow->setWindowIcon(std::filesystem::current_path() / "Data/Fairy-Tale-Castle-Princess.ico");
+
+    renderRec.acc      = Image3{scene->camera.width, scene->camera.height};
+    renderRec.accCount = 0;
+    renderRec.display  = Image4f{scene->camera.width, scene->camera.height};
 
     _initUI();
 }
 
 Application::~Application()
 {
+    parallel_cleanup();
+    rtcReleaseDevice(embreeDevice);
+
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
@@ -66,17 +109,31 @@ void Application::resizeFrameBuffer(uint32_t width, uint32_t height)
 void Application::renderFrame()
 {
     /// 这里执行主要的渲染逻辑
-    _renderUI();
 
-    const auto sz = _pWindow->getClientAreaSize();
-    glViewport(0, 0, sz.x, sz.y);
+    const auto w = scene->camera.width;
+    const auto h = scene->camera.height;
 
-    glClearColor(0.45f, 0.55f, 0.60f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glViewport(0, 0, w, h);
+    const auto img = render(*scene);
 
-    //        glRasterPos2i(-1, 1);
-    //        glPixelZoom(1.0f, -1.0f);
-    //        glDrawPixels(width, height,GL_RGBA,GL_UNSIGNED_BYTE, pixels);
+    renderRec.accCount              += 1;
+    scene->options.accumulate_count += 1;
+
+    Real f = Real(1.0) / (std::max(0.001, renderRec.accCount));
+    for (int y = 0; y < h; ++y) {
+        for (int x = 0; x < w; ++x) {
+            const auto acc      = renderRec.acc(x, y) + img(x, y);
+            renderRec.acc(x, y) = acc;
+
+            renderRec.display(x, y).x = std::pow((float)(std::clamp(acc.x * f, 0., 1.)), 1.0f / 2.2);
+            renderRec.display(x, y).y = std::pow((float)(std::clamp(acc.y * f, 0., 1.)), 1.0f / 2.2);
+            renderRec.display(x, y).z = std::pow((float)(std::clamp(acc.z * f, 0., 1.)), 1.0f / 2.2);
+        }
+    }
+
+    glRasterPos2i(-1, 1);
+    glPixelZoom(1.0f, -1.0f);
+    glDrawPixels(w, h, GL_RGBA, GL_FLOAT, renderRec.display.data.data());
 }
 
 void Application::shutdown(int returnCode)
@@ -91,7 +148,6 @@ AppConfig Application::getConfig() const
 {
     AppConfig c;
     c.windowDesc = _pWindow->getDesc();
-    c.showUI     = _showUI;
     return c;
 }
 
@@ -167,7 +223,7 @@ void Application::_initUI()
     (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
-
+    
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
     //ImGui::StyleColorsLight();
@@ -187,52 +243,18 @@ void Application::_renderUI()
     ImGuiIO& io = ImGui::GetIO();
     (void)io;
 
-    bool show_demo_window    = true;
-    bool show_another_window = false;
-    ImVec4 clear_color       = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    if (show_demo_window)
-        ImGui::ShowDemoWindow(&show_demo_window);
-
-    // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
     {
-        static float f     = 0.0f;
-        static int counter = 0;
+        ImGui::SetNextWindowBgAlpha(0.23f);
+        ImGui::Begin("Render Options");
+        ImGui::Text("Acc.Count = %lld", static_cast<uint64_t>(renderRec.accCount));
 
-        ImGui::Begin("Hello, world!");                     // Create a window called "Hello, world!" and append into it.
-
-        ImGui::Text("This is some useful text.");          // Display some text (you can use a format strings too)
-        ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
-        ImGui::Checkbox("Another Window", &show_another_window);
-
-        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);       // Edit 1 float using a slider from 0.0f to 1.0f
-        ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-        if (ImGui::Button(
-                "Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
-            counter++;
-        ImGui::SameLine();
-        ImGui::Text("counter = %d", counter);
-
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
         ImGui::End();
     }
 
-    // 3. Show another simple window.
-    if (show_another_window) {
-        ImGui::Begin(
-            "Another Window",
-            &show_another_window); // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-        ImGui::Text("Hello from another window!");
-        if (ImGui::Button("Close Me"))
-            show_another_window = false;
-        ImGui::End();
-    }
-    
     // Rendering
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

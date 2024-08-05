@@ -7,6 +7,6 @@
 namespace elma {
 struct Scene;
 
-Image3 render(const Scene& scene, Image3f& viewImage);
+Image3 render(const Scene& scene);
 
 } // namespace elma

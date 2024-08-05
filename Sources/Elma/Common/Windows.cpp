@@ -287,19 +287,6 @@ Window::Window(const Desc& desc, ICallbacks* pCallbacks)
     u32 w = desc.width;
     u32 h = desc.height;
 
-    if (desc.mode == WindowMode::FullScreen) {
-        glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
-        auto mon = glfwGetPrimaryMonitor();
-        auto mod = glfwGetVideoMode(mon);
-        w        = cast_to<u32>(mod->width);
-        h        = cast_to<u32>(mod->height);
-    }
-    else if (desc.mode == WindowMode::Minimized) {
-        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-        glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_FALSE);
-        glfwWindowHint(GLFW_FOCUSED, GLFW_FALSE);
-    }
-
     if (!desc.resizableWindow) {
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     }
@@ -329,14 +316,8 @@ Window::Window(const Desc& desc, ICallbacks* pCallbacks)
     glfwSetWindowSizeCallback(_pGLFWWindow, ApiCallbacks::windowSizeCallback);
     glfwSetDropCallback(_pGLFWWindow, ApiCallbacks::droppedFileCallback);
 
-    if (desc.mode == WindowMode::Minimized) {
-        glfwIconifyWindow(_pGLFWWindow);
-        glfwShowWindow(_pGLFWWindow);
-    }
-    else {
-        glfwShowWindow(_pGLFWWindow);
-        glfwFocusWindow(_pGLFWWindow);
-    }
+    glfwShowWindow(_pGLFWWindow);
+    glfwFocusWindow(_pGLFWWindow);
 
     ELMA_CHECK(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress), "glad 初始化失败.");
 }
@@ -381,12 +362,7 @@ void Window::resize(u32 width, u32 height)
 {
     glfwSetWindowSize(_pGLFWWindow, cast_to<i32>(width), cast_to<i32>(height));
 
-    if (_desc.mode == WindowMode::Minimized) {
-        _setWindowSize(cast_to<i32>(width), cast_to<i32>(height));
-    }
-    else {
-        _updateWindowSize();
-    }
+    _updateWindowSize();
 
     _pCallbacks->handleWindowSizeChange();
 }

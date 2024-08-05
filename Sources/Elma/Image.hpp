@@ -34,9 +34,12 @@ template<typename T> struct Image
     std::vector<T> data;
 };
 
-using Image1 = Image<Real>;
-using Image3 = Image<Vector3>;
+using Image1  = Image<Real>;
+using Image3  = Image<Vector3>;
 using Image3f = Image<Vector3f>;
+using Image4  = Image<Vector4>;
+using Image4u = Image<Vector4u>;
+using Image4f = Image<Vector4f>;
 
 /// Read from an 1 channel image. If the image is not actually
 /// single channel, the first channel is used.

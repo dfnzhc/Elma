@@ -25,16 +25,6 @@ public:
     using NativeHandle = void*;
 
     /**
-     * 窗口模式
-     */
-    enum class WindowMode
-    {
-        Normal,     ///< 普通窗口。
-        Minimized,  ///< 最小化窗口。
-        FullScreen, ///< 全屏窗口。
-    };
-
-    /**
      * 窗口配置
      */
     struct Desc
@@ -42,9 +32,7 @@ public:
         uint32_t width         = 1'920;           ///< 客户端区域的宽度。
         uint32_t height        = 1'080;           ///< 客户端区域的高度。
         std::string_view title = "Nova Renderer"; ///< 窗口标题。
-        WindowMode mode = WindowMode::Normal; ///< 窗口模式。在全屏模式下，宽度和高度将被忽略。
         bool resizableWindow = true;          ///< 允许用户调整窗口大小。
-        bool enableVSync     = false;         ///< 控制垂直同步。
     };
 
     /**

@@ -16,13 +16,9 @@ struct AppConfig
 {
     Window::Desc windowDesc; ///< Window settings.
 
-    bool headless  = false;
-    f32 timeScale  = 1.0f;
-    bool pauseTime = false;
-    bool showUI    = true;
-
-    bool generateShaderDebugInfo = false;
-    bool shaderPreciseFloat      = false;
+    std::string inputSceneFilename;
+    std::string outputFilename;
+    int numThreads;
 };
 
 class Application : public Window::ICallbacks
@@ -38,12 +34,6 @@ public:
     virtual void onShutdown() { }
 
     virtual void onResize(uint32_t /*width*/, uint32_t /*height*/) { }
-
-    virtual void onFrameRender() { }
-
-    //    virtual void onGuiRender(Gui* pGui){};
-
-    virtual void onOptionsChange() { }
 
     virtual void onHotReload() { }
 
@@ -64,10 +54,6 @@ public:
     void shutdown(int returnCode = 0);
 
     AppConfig getConfig() const;
-
-    void toggleVsync(bool on) { _vsyncOn = on; }
-
-    bool isVsyncEnabled() const { return _vsyncOn; }
 
     static std::string getKeyboardShortcutsStr();
 
@@ -90,9 +76,6 @@ private:
     InputState _inputState;
 
     bool _shouldTerminate = false;
-    bool _vsyncOn         = false;
-    bool _showUI          = true;
-
-    int _returnCode = 0;
+    int _returnCode       = 0;
 };
 }; // namespace elma
