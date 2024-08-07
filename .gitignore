@@ -373,16 +373,4 @@ MigrationBackup/
 /cmake-build-debug-clang-cl/
 /cmake-build-relwithdebinfo/
 /ThirdParty/Bee/
-/Data/Scenes/
-/ThirdParty/embree/bin/
-/ThirdParty/embree/include/
-/ThirdParty/embree/lib/
-/ThirdParty/miniz.c
-/ThirdParty/miniz.h
-/ThirdParty/pugiconfig.hpp
-/ThirdParty/pugixml.cpp
-/ThirdParty/pugixml.hpp
-/ThirdParty/stb_image.h
-/ThirdParty/tinyexr.h
-/ThirdParty/tinyply.h
-/ThirdParty/nanogui/
+
