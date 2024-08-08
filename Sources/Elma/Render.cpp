@@ -92,7 +92,8 @@ Image3 path_render(const Scene& scene)
     parallel_for(
         [&](const Vector2i& tile) {
             // Use a different rng stream for each thread.
-            pcg32_state rng = init_pcg32(tile[1] * num_tiles_x + tile[0] + num_acc);
+            const auto idx = tile[1] * num_tiles_x + tile[0];
+            pcg32_state rng = init_pcg32(idx, wyhash64(wyhash64(num_acc) + idx));
             int x0          = tile[0] * tile_size;
             int x1          = min(x0 + tile_size, w);
             int y0          = tile[1] * tile_size;
