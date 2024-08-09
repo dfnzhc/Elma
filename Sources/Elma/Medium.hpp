@@ -10,12 +10,12 @@ struct Scene;
 
 struct MediumBase
 {
-    PhaseFunction phase_function;
+    PhaseFunction phaseFunction;
 };
 
 struct HomogeneousMedium : public MediumBase
 {
-    Spectrum sigma_a, sigma_s;
+    Spectrum sigmaA, sigmaS;
 };
 
 struct HeterogeneousMedium : public MediumBase
@@ -26,13 +26,13 @@ struct HeterogeneousMedium : public MediumBase
 using Medium = std::variant<HomogeneousMedium, HeterogeneousMedium>;
 
 /// the maximum of sigma_t = sigma_s + sigma_a over the whole space
-Spectrum get_majorant(const Medium& medium, const Ray& ray);
-Spectrum get_sigma_s(const Medium& medium, const Vector3& p);
-Spectrum get_sigma_a(const Medium& medium, const Vector3& p);
+Spectrum GetMajorant(const Medium& medium, const Ray& ray);
+Spectrum GetSigmaS(const Medium& medium, const Vector3& p);
+Spectrum GetSigmaA(const Medium& medium, const Vector3& p);
 
-inline PhaseFunction get_phase_function(const Medium& medium)
+inline PhaseFunction GetPhaseFunction(const Medium& medium)
 {
-    return std::visit([&](const auto& m) { return m.phase_function; }, medium);
+    return std::visit([&](const auto& m) { return m.phaseFunction; }, medium);
 }
 
 } // namespace elma

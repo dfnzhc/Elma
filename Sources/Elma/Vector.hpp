@@ -195,39 +195,39 @@ template<typename T> inline TVector3<T>& operator/=(TVector3<T>& v, const T& s)
     return v;
 }
 
-template<typename T> inline T dot(const TVector3<T>& v0, const TVector3<T>& v1)
+template<typename T> inline T Dot(const TVector3<T>& v0, const TVector3<T>& v1)
 {
     return v0[0] * v1[0] + v0[1] * v1[1] + v0[2] * v1[2];
 }
 
-template<typename T> inline TVector3<T> cross(const TVector3<T>& v0, const TVector3<T>& v1)
+template<typename T> inline TVector3<T> Cross(const TVector3<T>& v0, const TVector3<T>& v1)
 {
     return TVector3<T>{v0[1] * v1[2] - v0[2] * v1[1], v0[2] * v1[0] - v0[0] * v1[2], v0[0] * v1[1] - v0[1] * v1[0]};
 }
 
-template<typename T> inline T distance_squared(const TVector3<T>& v0, const TVector3<T>& v1)
+template<typename T> inline T DistanceSquared(const TVector3<T>& v0, const TVector3<T>& v1)
 {
-    return dot(v0 - v1, v0 - v1);
+    return Dot(v0 - v1, v0 - v1);
 }
 
-template<typename T> inline T distance(const TVector3<T>& v0, const TVector3<T>& v1)
+template<typename T> inline T Distance(const TVector3<T>& v0, const TVector3<T>& v1)
 {
-    return std::sqrt(distance_squared(v0, v1));
+    return std::sqrt(DistanceSquared(v0, v1));
 }
 
-template<typename T> inline T length_squared(const TVector3<T>& v)
+template<typename T> inline T LengthSquared(const TVector3<T>& v)
 {
-    return dot(v, v);
+    return Dot(v, v);
 }
 
-template<typename T> inline T length(const TVector3<T>& v)
+template<typename T> inline T Length(const TVector3<T>& v)
 {
-    return std::sqrt(length_squared(v));
+    return std::sqrt(LengthSquared(v));
 }
 
 template<typename T> inline TVector3<T> normalize(const TVector3<T>& v0)
 {
-    auto l = length(v0);
+    auto l = Length(v0);
     if (l <= 0) {
         return TVector3<T>{0, 0, 0};
     }
@@ -236,37 +236,37 @@ template<typename T> inline TVector3<T> normalize(const TVector3<T>& v0)
     }
 }
 
-template<typename T> inline T average(const TVector3<T>& v)
+template<typename T> inline T Average(const TVector3<T>& v)
 {
     return (v.x + v.y + v.z) / 3;
 }
 
-template<typename T> inline T max(const TVector3<T>& v)
+template<typename T> inline T Max(const TVector3<T>& v)
 {
     return std::max(std::max(v.x, v.y), v.z);
 }
 
-template<typename T> inline TVector3<T> max(const TVector3<T>& v0, const TVector3<T>& v1)
+template<typename T> inline TVector3<T> Max(const TVector3<T>& v0, const TVector3<T>& v1)
 {
     return TVector3<T>{std::max(v0.x, v1.x), std::max(v0.y, v1.y), std::max(v0.z, v1.z)};
 }
 
-template<typename T> inline bool isnan(const TVector2<T>& v)
+template<typename T> inline bool IsNan(const TVector2<T>& v)
 {
     return std::isnan(v[0]) || std::isnan(v[1]);
 }
 
-template<typename T> inline bool isnan(const TVector3<T>& v)
+template<typename T> inline bool IsNan(const TVector3<T>& v)
 {
     return std::isnan(v[0]) || std::isnan(v[1]) || std::isnan(v[2]);
 }
 
-template<typename T> inline bool isfinite(const TVector2<T>& v)
+template<typename T> inline bool IsFinite(const TVector2<T>& v)
 {
     return std::isfinite(v[0]) || std::isfinite(v[1]);
 }
 
-template<typename T> inline bool isfinite(const TVector3<T>& v)
+template<typename T> inline bool IsFinite(const TVector3<T>& v)
 {
     return std::isfinite(v[0]) || std::isfinite(v[1]) || std::isfinite(v[2]);
 }

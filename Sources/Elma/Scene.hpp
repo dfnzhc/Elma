@@ -25,13 +25,13 @@ enum class Integrator
 
 struct RenderOptions
 {
-    Integrator integrator   = Integrator::Path;
-    int samples_per_pixel   = 4;
-    int accumulate_count    = 0;
-    int max_depth           = -1;
-    int rr_depth            = 5;
-    int vol_path_version    = 0;
-    int max_null_collisions = 1'000;
+    Integrator integrator = Integrator::Path;
+    int samplesPerPixel   = 4;
+    int accumulateCount   = 0;
+    int maxDepth          = -1;
+    int rrDepth           = 5;
+    int volPathVersion    = 0;
+    int maxNullCollisions = 1'000;
 };
 
 /// Bounding sphere
@@ -62,8 +62,8 @@ struct Scene
     Scene(const Scene& t)            = delete;
     Scene& operator=(const Scene& t) = delete;
 
-    RTCDevice embree_device;
-    RTCScene embree_scene;
+    RTCDevice embreeDevice;
+    RTCScene embreeScene;
     // We decide to maintain a copy of the scene here.
     // This allows us to manage the memory of the scene ourselves and decouple
     // from the scene parser, but it's obviously less efficient.
@@ -75,44 +75,44 @@ struct Scene
     const std::vector<Shape> shapes;
     const std::vector<Light> lights;
     const std::vector<Medium> media;
-    int envmap_light_id;
-    const TexturePool texture_pool;
+    int envmapLightId;
+    const TexturePool texturePool;
 
     // Bounding sphere of the scene.
     BSphere bounds;
 
     RenderOptions options;
-    std::string output_filename;
+    std::string outputFilename;
 
     // For sampling lights
-    TableDist1D light_dist;
+    TableDist1D lightDist;
 };
 
 /// Sample a light source from the scene given a random number u \in [0, 1]
-int sample_light(const Scene& scene, Real u);
+int SampleLight(const Scene& scene, Real u);
 
 /// The probability mass function of the sampling procedure above.
-Real light_pmf(const Scene& scene, int light_id);
+Real LightPmf(const Scene& scene, int light_id);
 
-inline bool has_envmap(const Scene& scene)
+inline bool HasEnvmap(const Scene& scene)
 {
-    return scene.envmap_light_id != -1;
+    return scene.envmapLightId != -1;
 }
 
-inline const Light& get_envmap(const Scene& scene)
+inline const Light& GetEnvmap(const Scene& scene)
 {
-    assert(scene.envmap_light_id != -1);
-    return scene.lights[scene.envmap_light_id];
+    assert(scene.envmapLightId != -1);
+    return scene.lights[scene.envmapLightId];
 }
 
-inline Real get_shadow_epsilon(const Scene& scene)
+inline Real GetShadowEpsilon(const Scene& scene)
 {
-    return min(scene.bounds.radius * Real(1e-5), Real(0.01));
+    return Min(scene.bounds.radius * Real(1e-5), Real(0.01));
 }
 
-inline Real get_intersection_epsilon(const Scene& scene)
+inline Real GetIntersectionEpsilon(const Scene& scene)
 {
-    return min(scene.bounds.radius * Real(1e-5), Real(0.01));
+    return Min(scene.bounds.radius * Real(1e-5), Real(0.01));
 }
 
 } // namespace elma

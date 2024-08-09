@@ -9,42 +9,42 @@ namespace elma {
 /// In the future we might implement a proper spectral renderer.
 using Spectrum = Vector3;
 
-inline Spectrum make_zero_spectrum()
+inline Spectrum MakeZeroSpectrum()
 {
     return Vector3{0, 0, 0};
 }
 
-inline Spectrum make_const_spectrum(Real v)
+inline Spectrum MakeConstSpectrum(Real v)
 {
     return Vector3{v, v, v};
 }
 
-inline Spectrum fromRGB(const Vector3& rgb)
+inline Spectrum FromRGB(const Vector3& rgb)
 {
     return rgb;
 }
 
-inline Spectrum sqrt(const Spectrum& s)
+inline Spectrum Sqrt(const Spectrum& s)
 {
-    return Vector3{std::sqrt(max(s[0], Real(0))), std::sqrt(max(s[1], Real(0))), std::sqrt(max(s[2], Real(0)))};
+    return Vector3{std::sqrt(Max(s[0], Real(0))), std::sqrt(Max(s[1], Real(0))), std::sqrt(Max(s[2], Real(0)))};
 }
 
-inline Spectrum exp(const Spectrum& s)
+inline Spectrum Exp(const Spectrum& s)
 {
     return Vector3{std::exp(s[0]), std::exp(s[1]), std::exp(s[2])};
 }
 
-inline Real luminance(const Spectrum& s)
+inline Real Luminance(const Spectrum& s)
 {
     return s.x * Real(0.212671) + s.y * Real(0.715160) + s.z * Real(0.072169);
 }
 
-inline Real avg(const Spectrum& s)
+inline Real Avg(const Spectrum& s)
 {
     return (s.x + s.y + s.z) / 3;
 }
 
-inline Vector3 toRGB(const Spectrum& s)
+inline Vector3 ToRGB(const Spectrum& s)
 {
     return s;
 }
@@ -76,17 +76,17 @@ inline Real zFit_1931(Real wavelength)
     return Real(1.217) * std::exp(-Real(0.5) * t1 * t1) + Real(0.681) * std::exp(-Real(0.5) * t2 * t2);
 }
 
-inline Vector3 XYZintegral_coeff(Real wavelength)
+inline Vector3 XYZ_IntegralCoeff(Real wavelength)
 {
     return Vector3{xFit_1931(wavelength), yFit_1931(wavelength), zFit_1931(wavelength)};
 }
 
-inline Vector3 integrate_XYZ(const std::vector<std::pair<Real, Real>>& data)
+inline Vector3 IntegrateXYZ(const std::vector<std::pair<Real, Real>>& data)
 {
     static const Real CIE_Y_integral = 106.856895;
     static const Real wavelength_beg = 400;
     static const Real wavelength_end = 700;
-    if (data.size() == 0) {
+    if (data.empty()) {
         return Vector3{0, 0, 0};
     }
     Vector3 ret  = Vector3{0, 0, 0};
@@ -116,7 +116,7 @@ inline Vector3 integrate_XYZ(const std::vector<std::pair<Real, Real>>& data)
             // assign the endpoint
             measurement = data[data_pos].second;
         }
-        Vector3 coeff  = XYZintegral_coeff(wavelength);
+        Vector3 coeff  = XYZ_IntegralCoeff(wavelength);
         ret           += coeff * measurement;
     }
     Real wavelength_span  = wavelength_end - wavelength_beg;
@@ -124,14 +124,14 @@ inline Vector3 integrate_XYZ(const std::vector<std::pair<Real, Real>>& data)
     return ret;
 }
 
-inline Vector3 XYZ_to_RGB(const Vector3& xyz)
+inline Vector3 XYZ_ToRGB(const Vector3& xyz)
 {
     return Vector3{Real(3.240479) * xyz[0] - Real(1.537150) * xyz[1] - Real(0.498535) * xyz[2],
                    Real(-0.969256) * xyz[0] + Real(1.875991) * xyz[1] + Real(0.041556) * xyz[2],
                    Real(0.055648) * xyz[0] - Real(0.204043) * xyz[1] + Real(1.057311) * xyz[2]};
 }
 
-inline Vector3 sRGB_to_RGB(const Vector3& srgb)
+inline Vector3 sRGBToRGB(const Vector3& srgb)
 {
     // https://en.wikipedia.org/wiki/SRGB#From_sRGB_to_CIE_XYZ
     Vector3 rgb = srgb;

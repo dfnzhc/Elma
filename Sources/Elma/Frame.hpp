@@ -9,8 +9,8 @@ namespace elma {
 /// orthogonal to each other.
 /// The approach here is based on Frisvad's paper
 /// "Building an Orthonormal Basis from a 3D Unit Vector Without Normalization"
-/// https://backend.orbit.dtu.dk/ws/portalfiles/portal/126824972/onb_frisvad_jgt2012_v2.pdf
-inline std::pair<Vector3, Vector3> coordinate_system(const Vector3& n)
+/// https://backend.orbit.dtu.dk/ws/portalfiles/portal/126824972/onb_frisvad_jgt2012_v2.Pdf
+inline std::pair<Vector3, Vector3> CoordinateSystem(const Vector3& n)
 {
     if (n[2] < Real(-1 + 1e-6)) {
         return std::make_pair(Vector3{0, -1, 0}, Vector3{-1, 0, 0});
@@ -30,7 +30,7 @@ struct Frame
 
     Frame(const Vector3& x, const Vector3& y, const Vector3& n) : x(x), y(y), n(n) { }
 
-    Frame(const Vector3& n) : n(n) { std::tie(x, y) = coordinate_system(n); }
+    Frame(const Vector3& n) : n(n) { std::tie(x, y) = CoordinateSystem(n); }
 
     inline Vector3& operator[](int i) { return *(&x + i); }
 
@@ -46,13 +46,13 @@ inline Frame operator-(const Frame& frame)
 }
 
 /// Project a vector to a frame's local coordinates.
-inline Vector3 to_local(const Frame& frame, const Vector3& v)
+inline Vector3 ToLocal(const Frame& frame, const Vector3& v)
 {
-    return Vector3{dot(v, frame[0]), dot(v, frame[1]), dot(v, frame[2])};
+    return Vector3{Dot(v, frame[0]), Dot(v, frame[1]), Dot(v, frame[2])};
 }
 
 /// Convert a vector in a frame's local coordinates to the reference coordinate the frame is in.
-inline Vector3 to_world(const Frame& frame, const Vector3& v)
+inline Vector3 ToWorld(const Frame& frame, const Vector3& v)
 {
     return frame[0] * v[0] + frame[1] * v[1] + frame[2] * v[2];
 }

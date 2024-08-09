@@ -5,12 +5,12 @@ namespace elma {
 
 inline Vector3 sample_cos_hemisphere(const Vector2& rnd_param)
 {
-    Real phi = c_TWOPI * rnd_param[0];
+    Real phi = kTwoPi * rnd_param[0];
     Real tmp = std::sqrt(std::clamp(1 - rnd_param[1], Real(0), Real(1)));
     return Vector3{cos(phi) * tmp, sin(phi) * tmp, std::sqrt(std::clamp(rnd_param[1], Real(0), Real(1)))};
 }
 
-struct eval_op
+struct EvalOp
 {
     Spectrum operator()(const Lambertian& bsdf) const;
     Spectrum operator()(const RoughPlastic& bsdf) const;
@@ -22,8 +22,8 @@ struct eval_op
     Spectrum operator()(const DisneySheen& bsdf) const;
     Spectrum operator()(const DisneyBSDF& bsdf) const;
 
-    const Vector3& dir_in;
-    const Vector3& dir_out;
+    const Vector3& dirIn;
+    const Vector3& dirOut;
     const PathVertex& vertex;
     const TexturePool& texture_pool;
     const TransportDirection& dir;
@@ -92,17 +92,17 @@ struct get_texture_op
 #include "Materials/DisneyBSDF.inl"
 
 
-Spectrum eval(const Material& material,
+Spectrum Eval(const Material& material,
               const Vector3& dir_in,
               const Vector3& dir_out,
               const PathVertex& vertex,
               const TexturePool& texture_pool,
               TransportDirection dir)
 {
-    return std::visit(eval_op{dir_in, dir_out, vertex, texture_pool, dir}, material);
+    return std::visit(EvalOp{dir_in, dir_out, vertex, texture_pool, dir}, material);
 }
 
-std::optional<BSDFSampleRecord> sample_bsdf(const Material& material,
+std::optional<BSDFSampleRecord> SampleBSDF(const Material& material,
                                             const Vector3& dir_in,
                                             const PathVertex& vertex,
                                             const TexturePool& texture_pool,
@@ -113,7 +113,7 @@ std::optional<BSDFSampleRecord> sample_bsdf(const Material& material,
     return std::visit(sample_bsdf_op{dir_in, vertex, texture_pool, rnd_param_uv, rnd_param_w, dir}, material);
 }
 
-Real pdf_sample_bsdf(const Material& material,
+Real PdfSampleBSDF(const Material& material,
                      const Vector3& dir_in,
                      const Vector3& dir_out,
                      const PathVertex& vertex,
@@ -123,7 +123,7 @@ Real pdf_sample_bsdf(const Material& material,
     return std::visit(pdf_sample_bsdf_op{dir_in, dir_out, vertex, texture_pool, dir}, material);
 }
 
-TextureSpectrum get_texture(const Material& material)
+TextureSpectrum GetTexture(const Material& material)
 {
     return std::visit(get_texture_op{}, material);
 }

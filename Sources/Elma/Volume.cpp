@@ -1,5 +1,5 @@
 #include "Volume.hpp"
-#include "Error.hpp"
+#include "Common/Error.hpp"
 #include <fstream>
 #include <variant>
 
@@ -20,18 +20,18 @@ std::variant<GridVolume<Real>, GridVolume<Vector3>> load_volume(const fs::path& 
     char header[3];
     fs.read(header, 3);
     if (header[0] != 'V' || header[1] != 'O' || header[2] != 'L') {
-        Error(std::string("Error loading volume from a file (incorrect header). Filename:") + filename.string());
+        ELMA_THROW("载入 Volume {} 失败：错误的 header 内容。", filename.string());
     }
     uint8_t version;
     fs.read((char*)&version, 1);
     if (version != 3) {
-        Error(std::string("Error loading volume from a file (incorrect header). Filename:") + filename.string());
+        ELMA_THROW("载入 Volume {} 失败：错误的 header 内容。", filename.string());
     }
 
     int type;
     fs.read((char*)&type, sizeof(int));
     if (type != EFloat32) {
-        Error(std::string("Unsupported volume format (only support Float32). Filename:") + filename.string());
+        ELMA_THROW("载入 Volume {} 失败：不支持的 Volume 格式(仅支持 Float32)。", filename.string());
     }
 
     int xres, yres, zres;
@@ -42,11 +42,11 @@ std::variant<GridVolume<Real>, GridVolume<Vector3>> load_volume(const fs::path& 
     int channels;
     fs.read((char*)&channels, sizeof(int));
     if (channels != 1 && channels != 3) {
-        Error(std::string("Unsupported volume format (wrong number of channels). Filename:") + filename.string())
+        ELMA_THROW("载入 Volume {} 失败：不支持的 Volume 格式(错误的通道数量)。", filename.string());
     }
 
     if (type != EFloat32) {
-        Error(std::string("Unsupported volume format (not Float32). Filename:") + filename.string());
+        ELMA_THROW("载入 Volume {} 失败：不支持的 Volume 格式(仅支持 Float32)。", filename.string());
     }
 
     float xmin, ymin, zmin;
@@ -66,7 +66,7 @@ std::variant<GridVolume<Real>, GridVolume<Vector3>> load_volume(const fs::path& 
         Real max_data = 0;
         for (int i = 0; i < xres * yres * zres; i++) {
             data[i]  = raw_data[channels * i];
-            max_data = max(max_data, data[i]);
+            max_data = Max(max_data, data[i]);
         }
         return GridVolume<Real>{
           Vector3i{xres, yres, zres},
@@ -80,16 +80,16 @@ std::variant<GridVolume<Real>, GridVolume<Vector3>> load_volume(const fs::path& 
     else {
         assert(target_channel == 3);
         std::vector<Spectrum> data(xres * yres * zres);
-        Spectrum max_data = make_zero_spectrum();
+        Spectrum max_data = MakeZeroSpectrum();
         for (int i = 0; i < xres * yres * zres; i++) {
             if (channels == 1) {
                 Real v  = raw_data[i];
-                data[i] = fromRGB(Vector3{v, v, v});
+                data[i] = FromRGB(Vector3{v, v, v});
             }
             else {
-                data[i] = fromRGB(Vector3{raw_data[3 * i + 0], raw_data[3 * i + 1], raw_data[3 * i + 2]});
+                data[i] = FromRGB(Vector3{raw_data[3 * i + 0], raw_data[3 * i + 1], raw_data[3 * i + 2]});
             }
-            max_data = max(max_data, data[i]);
+            max_data = Max(max_data, data[i]);
         }
         return GridVolume<Spectrum>{
           Vector3i{xres, yres, zres},
@@ -102,12 +102,12 @@ std::variant<GridVolume<Real>, GridVolume<Vector3>> load_volume(const fs::path& 
     }
 }
 
-template<> GridVolume<Real> load_volume_from_file(const fs::path& filename)
+template<> GridVolume<Real> LoadVolumeFromFile(const fs::path& filename)
 {
     return std::get<GridVolume<Real>>(load_volume(filename, 1));
 }
 
-template<> GridVolume<Vector3> load_volume_from_file(const fs::path& filename)
+template<> GridVolume<Vector3> LoadVolumeFromFile(const fs::path& filename)
 {
     return std::get<GridVolume<Vector3>>(load_volume(filename, 3));
 }

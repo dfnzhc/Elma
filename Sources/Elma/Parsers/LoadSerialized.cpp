@@ -1,7 +1,7 @@
 #include "LoadSerialized.hpp"
 #include <miniz.h>
-#include "Error.hpp"
 #include "Transform.hpp"
+#include "Common/Error.hpp"
 #include <fstream>
 #include <iostream>
 
@@ -32,29 +32,29 @@ public:
     virtual ~ZStream();
 
 private:
-    std::fstream& fs;
-    size_t fsize;
-    z_stream m_inflateStream;
-    uint8_t m_inflateBuffer[ZSTREAM_BUFSIZE];
+    std::fstream& _fs;
+    size_t _fileSize;
+    z_stream _inflateStream;
+    uint8_t _inflateBuffer[ZSTREAM_BUFSIZE];
 };
 
-ZStream::ZStream(std::fstream& fs) : fs(fs)
+ZStream::ZStream(std::fstream& fs) : _fs(fs)
 {
     std::streampos pos = fs.tellg();
     fs.seekg(0, fs.end);
-    fsize = (size_t)fs.tellg();
+    _fileSize = (size_t)fs.tellg();
     fs.seekg(pos, fs.beg);
 
-    int windowBits           = 15;
-    m_inflateStream.zalloc   = Z_NULL;
-    m_inflateStream.zfree    = Z_NULL;
-    m_inflateStream.opaque   = Z_NULL;
-    m_inflateStream.avail_in = 0;
-    m_inflateStream.next_in  = Z_NULL;
+    int windowBits          = 15;
+    _inflateStream.zalloc   = Z_NULL;
+    _inflateStream.zfree    = Z_NULL;
+    _inflateStream.opaque   = Z_NULL;
+    _inflateStream.avail_in = 0;
+    _inflateStream.next_in  = Z_NULL;
 
-    int retval = inflateInit2(&m_inflateStream, windowBits);
+    int retval = inflateInit2(&_inflateStream, windowBits);
     if (retval != Z_OK) {
-        Error("Could not initialize ZLIB");
+        ELMA_THROW("ZLib 初始化失败");
     }
 }
 
@@ -62,56 +62,56 @@ void ZStream::read(void* ptr, size_t size)
 {
     uint8_t* targetPtr = (uint8_t*)ptr;
     while (size > 0) {
-        if (m_inflateStream.avail_in == 0) {
-            size_t remaining         = fsize - fs.tellg();
-            m_inflateStream.next_in  = m_inflateBuffer;
-            m_inflateStream.avail_in = (uInt)min(remaining, sizeof(m_inflateBuffer));
-            if (m_inflateStream.avail_in == 0) {
-                Error("Read less data than expected");
+        if (_inflateStream.avail_in == 0) {
+            size_t remaining        = _fileSize - _fs.tellg();
+            _inflateStream.next_in  = _inflateBuffer;
+            _inflateStream.avail_in = (uInt)Min(remaining, sizeof(_inflateBuffer));
+            if (_inflateStream.avail_in == 0) {
+                ELMA_THROW("预期数据缺失，读取失败。");
             }
 
-            fs.read((char*)m_inflateBuffer, m_inflateStream.avail_in);
+            _fs.read((char*)_inflateBuffer, _inflateStream.avail_in);
         }
 
-        m_inflateStream.avail_out = (uInt)size;
-        m_inflateStream.next_out  = targetPtr;
+        _inflateStream.avail_out = (uInt)size;
+        _inflateStream.next_out  = targetPtr;
 
-        int retval = inflate(&m_inflateStream, Z_NO_FLUSH);
+        int retval = inflate(&_inflateStream, Z_NO_FLUSH);
         switch (retval) {
         case Z_STREAM_ERROR :
             {
-                Error("inflate(): stream error!");
+                ELMA_THROW("inflate(): stream error!");
             }
         case Z_NEED_DICT :
             {
-                Error("inflate(): need dictionary!");
+                ELMA_THROW("inflate(): need dictionary!");
             }
         case Z_DATA_ERROR :
             {
-                Error("inflate(): data error!");
+                ELMA_THROW("inflate(): data error!");
             }
         case Z_MEM_ERROR :
             {
-                Error("inflate(): memory error!");
+                ELMA_THROW("inflate(): memory error!");
             }
         };
 
-        size_t outputSize  = size - (size_t)m_inflateStream.avail_out;
+        size_t outputSize  = size - (size_t)_inflateStream.avail_out;
         targetPtr         += outputSize;
         size              -= outputSize;
 
         if (size > 0 && retval == Z_STREAM_END) {
-            Error("inflate(): attempting to read past the end of the stream!");
+            ELMA_THROW("inflate(): attempting to read past the end of the stream!");
         }
     }
 }
 
 ZStream::~ZStream()
 {
-    inflateEnd(&m_inflateStream);
+    inflateEnd(&_inflateStream);
 }
 
-void skip_to_idx(std::fstream& fs, const short version, const size_t idx)
+void SkipToIdx(std::fstream& fs, const short version, const size_t idx)
 {
     // Go to the end of the file to see how many components are there
     fs.seekg(-sizeof(uint32_t), fs.end);
@@ -133,7 +133,7 @@ void skip_to_idx(std::fstream& fs, const short version, const size_t idx)
     fs.ignore(sizeof(short) * 2);
 }
 
-template<typename Precision> std::vector<Vector3> load_position(ZStream& zs, int num_vertices)
+template<typename Precision> std::vector<Vector3> LoadPosition(ZStream& zs, int num_vertices)
 {
     std::vector<Vector3> vertices(num_vertices);
     for (int i = 0; i < (int)num_vertices; i++) {
@@ -146,7 +146,7 @@ template<typename Precision> std::vector<Vector3> load_position(ZStream& zs, int
     return vertices;
 }
 
-template<typename Precision> std::vector<Vector3> load_normal(ZStream& zs, int num_vertices)
+template<typename Precision> std::vector<Vector3> LoadNormal(ZStream& zs, int num_vertices)
 {
     std::vector<Vector3> normals(num_vertices);
     for (int i = 0; i < (int)normals.size(); i++) {
@@ -159,7 +159,7 @@ template<typename Precision> std::vector<Vector3> load_normal(ZStream& zs, int n
     return normals;
 }
 
-template<typename Precision> std::vector<Vector2> load_uv(ZStream& zs, int num_vertices)
+template<typename Precision> std::vector<Vector2> LoadUV(ZStream& zs, int num_vertices)
 {
     std::vector<Vector2> uvs(num_vertices);
     for (int i = 0; i < (int)uvs.size(); i++) {
@@ -171,7 +171,7 @@ template<typename Precision> std::vector<Vector2> load_uv(ZStream& zs, int num_v
     return uvs;
 }
 
-template<typename Precision> std::vector<Vector3> load_color(ZStream& zs, int num_vertices)
+template<typename Precision> std::vector<Vector3> LoadColor(ZStream& zs, int num_vertices)
 {
     std::vector<Vector3> colors(num_vertices);
     for (int i = 0; i < num_vertices; i++) {
@@ -184,7 +184,7 @@ template<typename Precision> std::vector<Vector3> load_color(ZStream& zs, int nu
     return colors;
 }
 
-TriangleMesh load_serialized(const fs::path& filename, int shape_index, const Matrix4x4& to_world)
+TriangleMesh LoadSerialized(const fs::path& filename, int shape_index, const Matrix4x4& to_world)
 {
     std::fstream fs(filename.c_str(), std::fstream::in | std::fstream::binary);
     // Format magic number, ignore it
@@ -193,7 +193,7 @@ TriangleMesh load_serialized(const fs::path& filename, int shape_index, const Ma
     short version = 0;
     fs.read((char*)&version, sizeof(short));
     if (shape_index > 0) {
-        skip_to_idx(fs, version, shape_index);
+        SkipToIdx(fs, version, shape_index);
     }
     ZStream zs(fs);
 
@@ -219,43 +219,43 @@ TriangleMesh load_serialized(const fs::path& filename, int shape_index, const Ma
 
     TriangleMesh mesh;
     if (file_double_precision) {
-        mesh.positions = load_position<double>(zs, vertex_count);
+        mesh.positions = LoadPosition<double>(zs, vertex_count);
     }
     else {
-        mesh.positions = load_position<float>(zs, vertex_count);
+        mesh.positions = LoadPosition<float>(zs, vertex_count);
     }
     for (auto& p : mesh.positions) {
-        p = xform_point(to_world, p);
+        p = TransformPoint(to_world, p);
     }
 
     if (flags & EHasNormals) {
         if (file_double_precision) {
-            mesh.normals = load_normal<double>(zs, vertex_count);
+            mesh.normals = LoadNormal<double>(zs, vertex_count);
         }
         else {
-            mesh.normals = load_normal<float>(zs, vertex_count);
+            mesh.normals = LoadNormal<float>(zs, vertex_count);
         }
         for (auto& n : mesh.normals) {
-            n = xform_normal(inverse(to_world), n);
+            n = TransformNormal(Inverse(to_world), n);
         }
     }
 
     if (flags & EHasTexcoords) {
         if (file_double_precision) {
-            mesh.uvs = load_uv<double>(zs, vertex_count);
+            mesh.uvs = LoadUV<double>(zs, vertex_count);
         }
         else {
-            mesh.uvs = load_uv<float>(zs, vertex_count);
+            mesh.uvs = LoadUV<float>(zs, vertex_count);
         }
     }
 
     if (flags & EHasColors) {
         // Ignore the color attributes.
         if (file_double_precision) {
-            load_color<double>(zs, vertex_count);
+            LoadColor<double>(zs, vertex_count);
         }
         else {
-            load_color<float>(zs, vertex_count);
+            LoadColor<float>(zs, vertex_count);
         }
     }
 

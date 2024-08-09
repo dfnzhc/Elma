@@ -4,7 +4,6 @@
 #include "Vector.hpp"
 #include <variant>
 
-
 namespace elma {
 
 // Many common open source renderers implement pixel filtering using
@@ -50,6 +49,6 @@ struct Gaussian
 
 using Filter = std::variant<Box, Tent, Gaussian>;
 
-Vector2 sample(const Filter& filter, const Vector2& rnd_param);
+Vector2 Sample(const std::variant<Box, Tent, Gaussian>& filter, const Vector2& rnd_param);
 
 } // namespace elma

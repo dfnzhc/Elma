@@ -13,68 +13,68 @@ Scene::Scene(const RTCDevice& embree_device,
              const TexturePool& texture_pool,
              const RenderOptions& options,
              const std::string& output_filename)
-: embree_device(embree_device),
+: embreeDevice(embree_device),
   camera(camera),
   materials(materials),
   shapes(shapes),
   lights(lights),
   media(media),
-  envmap_light_id(envmap_light_id),
-  texture_pool(texture_pool),
+  envmapLightId(envmap_light_id),
+  texturePool(texture_pool),
   options(options),
-  output_filename(output_filename)
+  outputFilename(output_filename)
 {
     // Register the geometry to Embree
-    embree_scene = rtcNewScene(embree_device);
+    embreeScene = rtcNewScene(embree_device);
     // We don't care about build time.
-    rtcSetSceneBuildQuality(embree_scene, RTC_BUILD_QUALITY_HIGH);
-    rtcSetSceneFlags(embree_scene, RTC_SCENE_FLAG_ROBUST);
+    rtcSetSceneBuildQuality(embreeScene, RTC_BUILD_QUALITY_HIGH);
+    rtcSetSceneFlags(embreeScene, RTC_SCENE_FLAG_ROBUST);
     for (const Shape& shape : this->shapes) {
-        register_embree(shape, embree_device, embree_scene);
+        RegisterEmbree(shape, embree_device, embreeScene);
     }
-    rtcCommitScene(embree_scene);
+    rtcCommitScene(embreeScene);
 
     // Get scene bounding box from Embree
     RTCBounds embree_bounds;
-    rtcGetSceneBounds(embree_scene, &embree_bounds);
+    rtcGetSceneBounds(embreeScene, &embree_bounds);
     Vector3 lb{embree_bounds.lower_x, embree_bounds.lower_y, embree_bounds.lower_z};
     Vector3 ub{embree_bounds.upper_x, embree_bounds.upper_y, embree_bounds.upper_z};
-    bounds = BSphere{distance(ub, lb) / 2, (lb + ub) / Real(2)};
+    bounds = BSphere{Distance(ub, lb) / 2, (lb + ub) / Real(2)};
 
     // build shape & light sampling distributions if necessary
     // TODO: const_cast is a bit ugly...
     std::vector<Shape>& mod_shapes = const_cast<std::vector<Shape>&>(this->shapes);
     for (Shape& shape : mod_shapes) {
-        init_sampling_dist(shape);
+        InitSamplingDist(shape);
     }
     std::vector<Light>& mod_lights = const_cast<std::vector<Light>&>(this->lights);
     for (Light& light : mod_lights) {
-        init_sampling_dist(light, *this);
+        InitSamplingDist(light, *this);
     }
 
     // build a sampling distributino for all the lights
     std::vector<Real> power(this->lights.size());
     for (int i = 0; i < (int)this->lights.size(); i++) {
-        power[i] = light_power(this->lights[i], *this);
+        power[i] = LightPower(this->lights[i], *this);
     }
-    light_dist = make_table_dist_1d(power);
+    lightDist = MakeTableDist1d(power);
 }
 
 Scene::~Scene()
 {
     // This decreses the reference count of embree_scene in Embree,
     // if it reaches zero, Embree will deallocate the scene.
-    rtcReleaseScene(embree_scene);
+    rtcReleaseScene(embreeScene);
 }
 
-int sample_light(const Scene& scene, Real u)
+int SampleLight(const Scene& scene, Real u)
 {
-    return sample(scene.light_dist, u);
+    return Sample(scene.lightDist, u);
 }
 
-Real light_pmf(const Scene& scene, int light_id)
+Real LightPmf(const Scene& scene, int light_id)
 {
-    return pmf(scene.light_dist, light_id);
+    return Pmf(scene.lightDist, light_id);
 }
 
 } // namespace elma

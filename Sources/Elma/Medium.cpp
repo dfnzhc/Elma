@@ -1,3 +1,4 @@
+#include <variant>
 #include "Medium.hpp"
 
 namespace elma {
@@ -28,17 +29,17 @@ struct get_sigma_a_op
 #include "Media/Homogeneous.inl"
 #include "Media/Heterogeneous.inl"
 
-Spectrum get_majorant(const Medium& medium, const Ray& ray)
+Spectrum GetMajorant(const std::variant<HomogeneousMedium, HeterogeneousMedium>& medium, const Ray& ray)
 {
     return std::visit(get_majorant_op{ray}, medium);
 }
 
-Spectrum get_sigma_s(const Medium& medium, const Vector3& p)
+Spectrum GetSigmaS(const std::variant<HomogeneousMedium, HeterogeneousMedium>& medium, const Vector3& p)
 {
     return std::visit(get_sigma_s_op{p}, medium);
 }
 
-Spectrum get_sigma_a(const Medium& medium, const Vector3& p)
+Spectrum GetSigmaA(const std::variant<HomogeneousMedium, HeterogeneousMedium>& medium, const Vector3& p)
 {
     return std::visit(get_sigma_a_op{p}, medium);
 }

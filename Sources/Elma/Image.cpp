@@ -4,9 +4,10 @@
 #define TINYEXR_USE_MINIZ 1
 #define TINYEXR_IMPLEMENTATION
 #include <tinyexr.h>
-#include "Error.hpp"
 #include <algorithm>
 #include <fstream>
+
+#include "Common/Error.hpp"
 
 namespace elma {
 
@@ -14,7 +15,7 @@ using std::string;
 using std::vector;
 
 // Stolen from https://github.com/halide/Halide/blob/c6529edb23b9fab8b406b28a4f9ea05b08f81cfe/src/Util.cpp#L253
-inline bool ends_with(const string& str, const string& suffix)
+inline bool EndsWith(const string& str, const string& suffix)
 {
     if (str.size() < suffix.size()) {
         return false;
@@ -28,10 +29,10 @@ inline bool ends_with(const string& str, const string& suffix)
     return true;
 }
 
-Image1 imread1(const fs::path& filename)
+Image1 ImageRead1(const fs::path& filename)
 {
     Image1 img;
-    std::string extension = to_lowercase(filename.extension().string());
+    std::string extension = ToLowercase(filename.extension().string());
     // JPG, PNG, TGA, BMP, PSD, GIF, HDR, PIC
     if (extension == ".jpg" || extension == ".png" || extension == ".tga" || extension == ".bmp" ||
         extension == ".psd" || extension == ".gif" || extension == ".hdr" || extension == ".pic")
@@ -44,7 +45,7 @@ Image1 imread1(const fs::path& filename)
 #endif
         img = Image1(w, h);
         if (data == nullptr) {
-            Error(std::string("Failure when loading image: ") + filename.string());
+            ELMA_THROW("图像 {} 载入失败.", filename.string());
         }
         for (int i = 0; i < w * h; i++) {
             img(i) = data[i];
@@ -62,9 +63,9 @@ Image1 imread1(const fs::path& filename)
         int ret = LoadEXR(&data, &width, &height, filename.c_str(), &err);
 #endif
         if (ret != TINYEXR_SUCCESS) {
-            std::cerr << "OpenEXR error: " << err << std::endl;
+            LogError("OpenEXR error: {}", err);
             FreeEXRErrorMessage(err);
-            Error(std::string("Failure when loading image: ") + filename.string());
+            ELMA_THROW("图像 {} 载入失败.", filename.string());
         }
         img = Image1(width, height);
         for (int i = 0; i < width * height; i++) {
@@ -73,15 +74,15 @@ Image1 imread1(const fs::path& filename)
         free(data);
     }
     else {
-        Error(std::string("Unsupported image format: ") + filename.string());
+        ELMA_THROW("不支持的图片格式: {} .", filename.string());
     }
     return img;
 }
 
-Image3 imread3(const fs::path& filename)
+Image3 ImageRead3(const fs::path& filename)
 {
     Image3 img;
-    std::string extension = to_lowercase(filename.extension().string());
+    std::string extension = ToLowercase(filename.extension().string());
     // JPG, PNG, TGA, BMP, PSD, GIF, HDR, PIC
     if (extension == ".jpg" || extension == ".png" || extension == ".tga" || extension == ".bmp" ||
         extension == ".psd" || extension == ".gif" || extension == ".hdr" || extension == ".pic")
@@ -94,8 +95,9 @@ Image3 imread3(const fs::path& filename)
 #endif
         img = Image3(w, h);
         if (data == nullptr) {
-            Error(std::string("Failure when loading image: ") + filename.string());
+            ELMA_THROW("图像 {} 载入失败.", filename.string());
         }
+
         int j = 0;
         for (int i = 0; i < w * h; i++) {
             img(i)[0] = data[j++];
@@ -115,9 +117,9 @@ Image3 imread3(const fs::path& filename)
         int ret = LoadEXR(&data, &width, &height, filename.c_str(), &err);
 #endif
         if (ret != TINYEXR_SUCCESS) {
-            std::cerr << "OpenEXR error: " << err << std::endl;
+            LogError("OpenEXR error: {}", err);
             FreeEXRErrorMessage(err);
-            Error(std::string("Failure when loading image: ") + filename.string());
+            ELMA_THROW("图像 {} 载入失败.", filename.string());
         }
         img = Image3(width, height);
         for (int i = 0; i < width * height; i++) {
@@ -126,17 +128,17 @@ Image3 imread3(const fs::path& filename)
         free(data);
     }
     else {
-        Error(std::string("Unsupported image format: ") + filename.string());
+        ELMA_THROW("不支持的图片格式: {} .", filename.string());
     }
     return img;
 }
 
-void imwrite(const fs::path& filename, const Image3& image)
+void ImageWrite(const fs::path& filename, const Image3& image)
 {
 #ifdef _WINDOWS
-    if (ends_with(filename.string(), ".pfm")) {
+    if (EndsWith(filename.string(), ".pfm")) {
 #else
-    if (ends_with(filename, ".pfm")) {
+    if (EndsWith(filename, ".pfm")) {
 #endif
         std::ofstream ofs(filename.c_str(), std::ios::binary);
         ofs << "PF" << std::endl;
@@ -150,10 +152,10 @@ void imwrite(const fs::path& filename, const Image3& image)
         ofs.write((const char*)data.data(), data.size() * sizeof(Vector3f));
 #ifdef _WINDOWS
     }
-    else if (ends_with(filename.string(), ".exr")) {
+    else if (EndsWith(filename.string(), ".exr")) {
 #else
     }
-    else if (ends_with(filename, ".exr")) {
+    else if (EndsWith(filename, ".exr")) {
 #endif
         // Convert image to float
         vector<Vector3f> data(image.data.size());
@@ -169,9 +171,9 @@ void imwrite(const fs::path& filename, const Image3& image)
             SaveEXR((float*)data.data(), image.width, image.height, 3, 1 /* write as fp16 */, filename.c_str(), &err);
 #endif
         if (ret != TINYEXR_SUCCESS) {
-            std::cerr << "OpenEXR error: " << err << std::endl;
+            LogError("OpenEXR error: {}", err);
             FreeEXRErrorMessage(err);
-            Error(std::string("Failure when writing image: ") + filename.string());
+            ELMA_THROW("写入图像 {} 失败.", filename.string());
         }
     }
 }

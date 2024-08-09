@@ -6,7 +6,7 @@
 
 namespace elma {
 
-std::optional<PathVertex> intersect(const Scene& scene, const Ray& ray, const RayDifferential& ray_diff)
+std::optional<PathVertex> Intersect(const Scene& scene, const Ray& ray, const RayDifferential& ray_diff)
 {
     RTCIntersectArguments rtc_args;
     rtcInitIntersectArguments(&rtc_args);
@@ -17,12 +17,12 @@ std::optional<PathVertex> intersect(const Scene& scene, const Ray& ray, const Ra
       (float)ray.org.x,
       (float)ray.org.y,
       (float)ray.org.z,
-      (float)ray.tnear,
+      (float)ray.tNear,
       (float)ray.dir.x,
       (float)ray.dir.y,
       (float)ray.dir.z,
       0.f,                // time
-      (float)ray.tfar,
+      (float)ray.tFar,
       (unsigned int)(-1), // mask
       0,                  // ray ID
       0                   // ray flags
@@ -37,7 +37,7 @@ std::optional<PathVertex> intersect(const Scene& scene, const Ray& ray, const Ra
       RTC_INVALID_GEOMETRY_ID,  // geometry ID
       {RTC_INVALID_GEOMETRY_ID} // instance IDs
     };
-    rtcIntersect1(scene.embree_scene, &rtc_rayhit, &rtc_args);
+    rtcIntersect1(scene.embreeScene, &rtc_rayhit, &rtc_args);
     if (rtc_hit.geomID == RTC_INVALID_GEOMETRY_ID) {
         return {};
     };
@@ -46,33 +46,33 @@ std::optional<PathVertex> intersect(const Scene& scene, const Ray& ray, const Ra
     PathVertex vertex;
     vertex.position =
         Vector3{ray.org.x, ray.org.y, ray.org.z} + Vector3{ray.dir.x, ray.dir.y, ray.dir.z} * Real(rtc_ray.tfar);
-    vertex.geometric_normal   = normalize(Vector3{rtc_hit.Ng_x, rtc_hit.Ng_y, rtc_hit.Ng_z});
-    vertex.shape_id           = rtc_hit.geomID;
-    vertex.primitive_id       = rtc_hit.primID;
-    const Shape& shape        = scene.shapes[vertex.shape_id];
-    vertex.material_id        = get_material_id(shape);
-    vertex.interior_medium_id = get_interior_medium_id(shape);
-    vertex.exterior_medium_id = get_exterior_medium_id(shape);
+    vertex.normal             = normalize(Vector3{rtc_hit.Ng_x, rtc_hit.Ng_y, rtc_hit.Ng_z});
+    vertex.shapeId            = rtc_hit.geomID;
+    vertex.primitiveId        = rtc_hit.primID;
+    const Shape& shape        = scene.shapes[vertex.shapeId];
+    vertex.materialId         = GetMaterialId(shape);
+    vertex.interiorMediumId   = GetInteriorMediumId(shape);
+    vertex.exteriorMediumId   = GetExteriorMediumId(shape);
     vertex.st                 = Vector2{rtc_hit.u, rtc_hit.v};
 
-    ShadingInfo shading_info = compute_shading_info(scene.shapes[vertex.shape_id], vertex);
-    vertex.shading_frame     = shading_info.shading_frame;
+    ShadingInfo shading_info = ComputeShadingInfo(scene.shapes[vertex.shapeId], vertex);
+    vertex.shadingFrame      = shading_info.shadingFrame;
     vertex.uv                = shading_info.uv;
-    vertex.mean_curvature    = shading_info.mean_curvature;
-    vertex.ray_radius        = transfer(ray_diff, distance(ray.org, vertex.position));
+    vertex.meanCurvature     = shading_info.meanCurvature;
+    vertex.rayRadius         = Transfer(ray_diff, Distance(ray.org, vertex.position));
     // vertex.ray_radius stores approximatedly dp/dx,
     // we get uv_screen_size (du/dx) using (dp/dx)/(dp/du)
-    vertex.uv_screen_size = vertex.ray_radius / shading_info.inv_uv_size;
+    vertex.uvScreenSize = vertex.rayRadius / shading_info.invUvSize;
 
     // Flip the geometry normal to the same direction as the shading normal
-    if (dot(vertex.geometric_normal, vertex.shading_frame.n) < 0) {
-        vertex.geometric_normal = -vertex.geometric_normal;
+    if (Dot(vertex.normal, vertex.shadingFrame.n) < 0) {
+        vertex.normal = -vertex.normal;
     }
 
     return vertex;
 }
 
-bool occluded(const Scene& scene, const Ray& ray)
+bool Occluded(const Scene& scene, const Ray& ray)
 {
     RTCOccludedArguments rtc_args;
     rtcInitOccludedArguments(&rtc_args);
@@ -83,22 +83,22 @@ bool occluded(const Scene& scene, const Ray& ray)
     rtc_ray.dir_x = (float)ray.dir[0];
     rtc_ray.dir_y = (float)ray.dir[1];
     rtc_ray.dir_z = (float)ray.dir[2];
-    rtc_ray.tnear = (float)ray.tnear;
-    rtc_ray.tfar  = (float)ray.tfar;
+    rtc_ray.tnear = (float)ray.tNear;
+    rtc_ray.tfar  = (float)ray.tFar;
     rtc_ray.mask  = (unsigned int)(-1);
     rtc_ray.time  = 0.f;
     rtc_ray.flags = 0;
     // TODO: switch to rtcOccluded16
-    rtcOccluded1(scene.embree_scene, &rtc_ray, &rtc_args);
+    rtcOccluded1(scene.embreeScene, &rtc_ray, &rtc_args);
     return rtc_ray.tfar < 0;
 }
 
-Spectrum emission(const PathVertex& v, const Vector3& view_dir, const Scene& scene)
+Spectrum Emission(const PathVertex& v, const Vector3& view_dir, const Scene& scene)
 {
-    int light_id = get_area_light_id(scene.shapes[v.shape_id]);
+    int light_id = GetAreaLightId(scene.shapes[v.shapeId]);
     assert(light_id >= 0);
     const Light& light = scene.lights[light_id];
-    return emission(light, view_dir, v.uv_screen_size, PointAndNormal{v.position, v.geometric_normal}, scene);
+    return Emission(light, view_dir, v.uvScreenSize, PointAndNormal{v.position, v.normal}, scene);
 }
 
 } // namespace elma

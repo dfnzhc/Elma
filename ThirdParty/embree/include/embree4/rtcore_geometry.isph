@@ -211,10 +211,10 @@ RTC_API void rtcSetGeometryUserPrimitiveCount(RTCGeometry geometry, uniform unsi
 RTC_API void rtcSetGeometryBoundsFunction(RTCGeometry geometry, uniform RTCBoundsFunction bounds, void* uniform userPtr);
 
 /* Set the intersect callback function of a user geometry. */
-RTC_API void rtcSetGeometryIntersectFunction(RTCGeometry geometry, uniform RTCIntersectFunctionN intersect);
+RTC_API void rtcSetGeometryIntersectFunction(RTCGeometry geometry, uniform RTCIntersectFunctionN Intersect);
 
 /* Set the occlusion callback function of a user geometry. */
-RTC_API void rtcSetGeometryOccludedFunction(RTCGeometry geometry, uniform RTCOccludedFunctionN occluded);
+RTC_API void rtcSetGeometryOccludedFunction(RTCGeometry geometry, uniform RTCOccludedFunctionN Occluded);
 
 /* Invokes the intersection filter from the intersection callback function. */
 RTC_API void rtcInvokeIntersectFilterFromGeometry(const uniform struct RTCIntersectFunctionNArguments* uniform args, const uniform RTCFilterFunctionNArguments* uniform filterArgs);

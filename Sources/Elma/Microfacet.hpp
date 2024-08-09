@@ -17,13 +17,13 @@ namespace elma {
 
 /// Schlick's Fresnel equation approximation
 /// from "An Inexpensive BRDF Model for Physically-based Rendering", Schlick
-/// https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.50.2297&rep=rep1&type=pdf
+/// https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.50.2297&rep=rep1&type=Pdf
 /// See "Memo on Fresnel equations" from Sebastien Lagarde
 /// for a really nice introduction.
 /// https://seblagarde.wordpress.com/2013/04/29/memo-on-fresnel-equations/
-template<typename T> inline T schlick_fresnel(const T& F0, Real cos_theta)
+template<typename T> inline T SchlickFresnel(const T& F0, Real cos_theta)
 {
-    return F0 + (Real(1) - F0) * pow(max(1 - cos_theta, Real(0)), Real(5));
+    return F0 + (Real(1) - F0) * std::pow(Max(1 - cos_theta, Real(0)), Real(5));
 }
 
 /// Fresnel equation of a dielectric interface.
@@ -31,7 +31,7 @@ template<typename T> inline T schlick_fresnel(const T& F0, Real cos_theta)
 /// n_dot_i: abs(cos(incident angle))
 /// n_dot_t: abs(cos(transmission angle))
 /// eta: eta_transmission / eta_incident
-inline Real fresnel_dielectric(Real n_dot_i, Real n_dot_t, Real eta)
+inline Real FresnelDielectric(Real n_dot_i, Real n_dot_t, Real eta)
 {
     assert(n_dot_i >= 0 && n_dot_t >= 0 && eta > 0);
     Real rs = (n_dot_i - eta * n_dot_t) / (n_dot_i + eta * n_dot_t);
@@ -45,7 +45,7 @@ inline Real fresnel_dielectric(Real n_dot_i, Real n_dot_t, Real eta)
 /// The transmission angle is derived from
 /// n_dot_i: cos(incident angle) (can be negative)
 /// eta: eta_transmission / eta_incident
-inline Real fresnel_dielectric(Real n_dot_i, Real eta)
+inline Real FresnelDielectric(Real n_dot_i, Real eta)
 {
     assert(eta > 0);
     Real n_dot_t_sq = 1 - (1 - n_dot_i * n_dot_i) / (eta * eta);
@@ -54,7 +54,7 @@ inline Real fresnel_dielectric(Real n_dot_i, Real eta)
         return 1;
     }
     Real n_dot_t = std::sqrt(n_dot_t_sq);
-    return fresnel_dielectric(fabs(n_dot_i), n_dot_t, eta);
+    return FresnelDielectric(std::abs(n_dot_i), n_dot_t, eta);
 }
 
 inline Real GTR2(Real n_dot_h, Real roughness)
@@ -62,7 +62,7 @@ inline Real GTR2(Real n_dot_h, Real roughness)
     Real alpha = roughness * roughness;
     Real a2    = alpha * alpha;
     Real t     = 1 + (a2 - 1) * n_dot_h * n_dot_h;
-    return a2 / (c_PI * t * t);
+    return a2 / (kPi * t * t);
 }
 
 inline Real GGX(Real n_dot_h, Real roughness)
@@ -73,10 +73,10 @@ inline Real GGX(Real n_dot_h, Real roughness)
 /// The masking term models the occlusion between the small mirrors of the microfacet models.
 /// See Eric Heitz's paper "Understanding the Masking-Shadowing Function in Microfacet-Based BRDFs"
 /// for a great explanation.
-/// https://jcgt.org/published/0003/02/03/paper.pdf
+/// https://jcgt.org/published/0003/02/03/paper.Pdf
 /// The derivation is based on Smith's paper "Geometrical shadowing of a random rough surface".
 /// Note that different microfacet distributions have different masking terms.
-inline Real smith_masking_gtr2(const Vector3& v_local, Real roughness)
+inline Real SmithMaskingGTR2(const Vector3& v_local, Real roughness)
 {
     Real alpha  = roughness * roughness;
     Real a2     = alpha * alpha;
@@ -87,12 +87,12 @@ inline Real smith_masking_gtr2(const Vector3& v_local, Real roughness)
 
 /// See "Sampling the GGX Distribution of Visible Normals", Heitz, 2018.
 /// https://jcgt.org/published/0007/04/01/
-inline Vector3 sample_visible_normals(const Vector3& local_dir_in, Real alpha, const Vector2& rnd_param)
+inline Vector3 SampleVisibleNormals(const Vector3& local_dir_in, Real alpha, const Vector2& rnd_param)
 {
     // The incoming direction is in the "ellipsodial configuration" in Heitz's paper
     if (local_dir_in.z < 0) {
         // Ensure the input is on top of the surface.
-        return -sample_visible_normals(-local_dir_in, alpha, rnd_param);
+        return -SampleVisibleNormals(-local_dir_in, alpha, rnd_param);
     }
 
     // Transform the incoming direction to the "hemisphere configuration".
@@ -101,20 +101,20 @@ inline Vector3 sample_visible_normals(const Vector3& local_dir_in, Real alpha, c
     // Parameterization of the projected area of a hemisphere.
     // First, sample a disk.
     Real r   = std::sqrt(rnd_param.x);
-    Real phi = 2 * c_PI * rnd_param.y;
-    Real t1  = r * cos(phi);
-    Real t2  = r * sin(phi);
+    Real phi = 2 * kPi * rnd_param.y;
+    Real t1  = r * std::cos(phi);
+    Real t2  = r * std::sin(phi);
     // Vertically scale the position of a sample to account for the projection.
     Real s = (1 + hemi_dir_in.z) / 2;
     t2     = (1 - s) * std::sqrt(1 - t1 * t1) + s * t2;
     // Point in the disk space
-    Vector3 disk_N{t1, t2, std::sqrt(max(Real(0), 1 - t1 * t1 - t2 * t2))};
+    Vector3 disk_N{t1, t2, std::sqrt(Max(Real(0), 1 - t1 * t1 - t2 * t2))};
 
     // Reprojection onto hemisphere -- we get our sampled normal in hemisphere space.
     Frame hemi_frame(hemi_dir_in);
-    Vector3 hemi_N = to_world(hemi_frame, disk_N);
+    Vector3 hemi_N = ToWorld(hemi_frame, disk_N);
 
     // Transforming the normal back to the ellipsoid configuration
-    return normalize(Vector3{alpha * hemi_N.x, alpha * hemi_N.y, max(Real(0), hemi_N.z)});
+    return normalize(Vector3{alpha * hemi_N.x, alpha * hemi_N.y, Max(Real(0), hemi_N.z)});
 }
 } // namespace elma

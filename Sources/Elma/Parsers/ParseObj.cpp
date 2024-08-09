@@ -1,6 +1,6 @@
 #include "ParseObj.hpp"
-#include "Error.hpp"
 #include "Transform.hpp"
+#include "Common/Error.hpp"
 
 #include <fstream>
 #include <functional>
@@ -12,26 +12,26 @@ namespace elma {
 
 // https://stackoverflow.com/questions/216823/how-to-trim-a-stdstring
 // trim from start
-static inline std::string& ltrim(std::string& s)
+static inline std::string& LeftTrim(std::string& s)
 {
     s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) { return !std::isspace(ch); }));
     return s;
 }
 
 // trim from end
-static inline std::string& rtrim(std::string& s)
+static inline std::string& RightTrim(std::string& s)
 {
     s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(), s.end());
     return s;
 }
 
 // trim from both ends
-static inline std::string& trim(std::string& s)
+static inline std::string& Trim(std::string& s)
 {
-    return ltrim(rtrim(s));
+    return LeftTrim(RightTrim(s));
 }
 
-static std::vector<int> split_face_str(const std::string& s)
+static std::vector<int> SplitFaceStr(const std::string& s)
 {
     std::regex rgx("/");
     std::sregex_token_iterator first{begin(s), end(s), rgx, -1}, last;
@@ -70,32 +70,32 @@ struct ObjVertex
     int v, vt, vn;
 };
 
-size_t get_vertex_id(const ObjVertex& vertex,
-                     const std::vector<Vector3>& pos_pool,
-                     const std::vector<Vector2>& st_pool,
-                     const std::vector<Vector3>& nor_pool,
-                     const Matrix4x4& to_world,
-                     std::vector<Vector3>& pos,
-                     std::vector<Vector2>& st,
-                     std::vector<Vector3>& nor,
-                     std::map<ObjVertex, size_t>& vertex_map)
+size_t GetVertexId(const ObjVertex& vertex,
+                   const std::vector<Vector3>& pos_pool,
+                   const std::vector<Vector2>& st_pool,
+                   const std::vector<Vector3>& nor_pool,
+                   const Matrix4x4& to_world,
+                   std::vector<Vector3>& pos,
+                   std::vector<Vector2>& st,
+                   std::vector<Vector3>& nor,
+                   std::map<ObjVertex, size_t>& vertex_map)
 {
     auto it = vertex_map.find(vertex);
     if (it != vertex_map.end()) {
         return it->second;
     }
     size_t id = pos.size();
-    pos.push_back(xform_point(to_world, pos_pool[vertex.v]));
+    pos.push_back(TransformPoint(to_world, pos_pool[vertex.v]));
     if (vertex.vt != -1)
         st.push_back(st_pool[vertex.vt]);
     if (vertex.vn != -1) {
-        nor.push_back(xform_normal(inverse(to_world), nor_pool[vertex.vn]));
+        nor.push_back(TransformNormal(Inverse(to_world), nor_pool[vertex.vn]));
     }
     vertex_map[vertex] = id;
     return id;
 }
 
-TriangleMesh parse_obj(const fs::path& filename, const Matrix4x4& to_world)
+TriangleMesh ParseObj(const fs::path& filename, const Matrix4x4& to_world)
 {
     std::vector<Vector3> pos_pool;
     std::vector<Vector3> nor_pool;
@@ -105,12 +105,12 @@ TriangleMesh parse_obj(const fs::path& filename, const Matrix4x4& to_world)
 
     std::ifstream ifs(filename.c_str(), std::ifstream::in);
     if (!ifs.is_open()) {
-        Error("Unable to open the obj file");
+        ELMA_THROW("无法打开 obj 文件 {}.", filename.string());
     }
     while (ifs.good()) {
         std::string line;
         std::getline(ifs, line);
-        line = trim(line);
+        line = Trim(line);
         if (line.size() == 0 || line[0] == '#') { // comment
             continue;
         }
@@ -136,30 +136,30 @@ TriangleMesh parse_obj(const fs::path& filename, const Matrix4x4& to_world)
         else if (token == "f") {
             std::string i0, i1, i2;
             ss >> i0 >> i1 >> i2;
-            std::vector<int> i0f = split_face_str(i0);
-            std::vector<int> i1f = split_face_str(i1);
-            std::vector<int> i2f = split_face_str(i2);
+            std::vector<int> i0f = SplitFaceStr(i0);
+            std::vector<int> i1f = SplitFaceStr(i1);
+            std::vector<int> i2f = SplitFaceStr(i2);
 
             ObjVertex v0(i0f), v1(i1f), v2(i2f);
-            size_t v0id = get_vertex_id(
+            size_t v0id = GetVertexId(
                 v0, pos_pool, st_pool, nor_pool, to_world, mesh.positions, mesh.uvs, mesh.normals, vertex_map);
-            size_t v1id = get_vertex_id(
+            size_t v1id = GetVertexId(
                 v1, pos_pool, st_pool, nor_pool, to_world, mesh.positions, mesh.uvs, mesh.normals, vertex_map);
-            size_t v2id = get_vertex_id(
+            size_t v2id = GetVertexId(
                 v2, pos_pool, st_pool, nor_pool, to_world, mesh.positions, mesh.uvs, mesh.normals, vertex_map);
             mesh.indices.push_back(Vector3i{v0id, v1id, v2id});
 
             std::string i3;
             if (ss >> i3) {
-                std::vector<int> i3f = split_face_str(i3);
+                std::vector<int> i3f = SplitFaceStr(i3);
                 ObjVertex v3(i3f);
-                size_t v3id = get_vertex_id(
+                size_t v3id = GetVertexId(
                     v3, pos_pool, st_pool, nor_pool, to_world, mesh.positions, mesh.uvs, mesh.normals, vertex_map);
                 mesh.indices.push_back(Vector3i{v0id, v2id, v3id});
             }
             std::string i4;
             if (ss >> i4) {
-                Error("The object file contains n-gon (n>4) that we do not support.");
+                ELMA_THROW("obj 文件 {} 包含非三角面数据，读取失败。", filename.string());
             }
         } // Currently ignore other tokens
     }

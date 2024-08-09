@@ -24,11 +24,11 @@ private:
     int count;
 };
 
-static std::vector<std::thread> threads;
-static bool shutdownThreads = false;
+static std::vector<std::thread> sThreads;
+static bool sShutdownThreads = false;
 struct ParallelForLoop;
-static ParallelForLoop* workList = nullptr;
-static std::mutex workListMutex;
+static ParallelForLoop* sWorkList = nullptr;
+static std::mutex sWorkListMutex;
 
 struct ParallelForLoop
 {
@@ -86,15 +86,15 @@ static void worker_thread_func(const int tIndex, std::shared_ptr<Barrier> barrie
     // the threads have cleared it.
     barrier.reset();
 
-    std::unique_lock<std::mutex> lock(workListMutex);
-    while (!shutdownThreads) {
-        if (!workList) {
+    std::unique_lock<std::mutex> lock(sWorkListMutex);
+    while (!sShutdownThreads) {
+        if (!sWorkList) {
             // Sleep until there are more tasks to run
             workListCondition.wait(lock);
         }
         else {
             // Get work from _workList_ and run loop iterations
-            ParallelForLoop& loop = *workList;
+            ParallelForLoop& loop = *sWorkList;
 
             // Run a chunk of loop iterations for _loop_
 
@@ -105,7 +105,7 @@ static void worker_thread_func(const int tIndex, std::shared_ptr<Barrier> barrie
             // Update _loop_ to reflect iterations this thread will run
             loop.nextIndex = indexEnd;
             if (loop.nextIndex == loop.maxIndex)
-                workList = loop.next;
+                sWorkList = loop.next;
             loop.activeWorkers++;
 
             // Run loop indices in _[indexStart, indexEnd)_
@@ -134,7 +134,7 @@ static void worker_thread_func(const int tIndex, std::shared_ptr<Barrier> barrie
 void parallel_for(const std::function<void(int)>& func, int64_t count, int64_t chunkSize)
 {
     // Run iterations immediately if not using threads or if _count_ is small
-    if (threads.empty() || count < chunkSize) {
+    if (sThreads.empty() || count < chunkSize) {
         for (int i = 0; i < (int)count; i++) {
             func(i);
         }
@@ -143,13 +143,13 @@ void parallel_for(const std::function<void(int)>& func, int64_t count, int64_t c
 
     // Create and enqueue _ParallelForLoop_ for this loop
     ParallelForLoop loop(func, count, chunkSize);
-    workListMutex.lock();
-    loop.next = workList;
-    workList  = &loop;
-    workListMutex.unlock();
+    sWorkListMutex.lock();
+    loop.next = sWorkList;
+    sWorkList = &loop;
+    sWorkListMutex.unlock();
 
     // Notify worker threads of work to be done
-    std::unique_lock<std::mutex> lock(workListMutex);
+    std::unique_lock<std::mutex> lock(sWorkListMutex);
     workListCondition.notify_all();
 
     // Help out with parallel loop iterations in the current thread
@@ -163,7 +163,7 @@ void parallel_for(const std::function<void(int)>& func, int64_t count, int64_t c
         // Update _loop_ to reflect iterations this thread will run
         loop.nextIndex = indexEnd;
         if (loop.nextIndex == loop.maxIndex) {
-            workList = loop.next;
+            sWorkList = loop.next;
         }
         loop.activeWorkers++;
 
@@ -188,10 +188,10 @@ void parallel_for(const std::function<void(int)>& func, int64_t count, int64_t c
 
 thread_local int ThreadIndex;
 
-void parallel_for(std::function<void(Vector2i)> func, const Vector2i count)
+void ParallelFor(std::function<void(Vector2i)> func, const Vector2i count)
 {
     // Launch worker threads if needed
-    if (threads.empty() || count.x * count.y <= 1) {
+    if (sThreads.empty() || count.x * count.y <= 1) {
         for (int y = 0; y < count.y; ++y) {
             for (int x = 0; x < count.x; ++x) {
                 func(Vector2i{x, y});
@@ -202,12 +202,12 @@ void parallel_for(std::function<void(Vector2i)> func, const Vector2i count)
 
     ParallelForLoop loop(std::move(func), count);
     {
-        std::lock_guard<std::mutex> lock(workListMutex);
-        loop.next = workList;
-        workList  = &loop;
+        std::lock_guard<std::mutex> lock(sWorkListMutex);
+        loop.next = sWorkList;
+        sWorkList = &loop;
     }
 
-    std::unique_lock<std::mutex> lock(workListMutex);
+    std::unique_lock<std::mutex> lock(sWorkListMutex);
     workListCondition.notify_all();
 
     // Help out with parallel loop iterations in the current thread
@@ -221,7 +221,7 @@ void parallel_for(std::function<void(Vector2i)> func, const Vector2i count)
         // Update _loop_ to reflect iterations this thread will run
         loop.nextIndex = indexEnd;
         if (loop.nextIndex == loop.maxIndex) {
-            workList = loop.next;
+            sWorkList = loop.next;
         }
         loop.activeWorkers++;
 
@@ -244,9 +244,9 @@ void parallel_for(std::function<void(Vector2i)> func, const Vector2i count)
     }
 }
 
-void parallel_init(int num_threads)
+void ParallelInit(int num_threads)
 {
-    assert(threads.size() == 0);
+    assert(sThreads.size() == 0);
     ThreadIndex = 0;
 
     // Create a barrier so that we can be sure all worker threads get past
@@ -258,29 +258,29 @@ void parallel_init(int num_threads)
     // Launch one fewer worker thread than the total number we want doing
     // work, since the main thread helps out, too.
     for (int i = 0; i < num_threads - 1; ++i) {
-        threads.push_back(std::thread(worker_thread_func, i + 1, barrier));
+        sThreads.push_back(std::thread(worker_thread_func, i + 1, barrier));
     }
 
     barrier->Wait();
 }
 
-void parallel_cleanup()
+void ParallelCleanup()
 {
-    if (threads.empty()) {
+    if (sThreads.empty()) {
         return;
     }
 
     {
-        std::lock_guard<std::mutex> lock(workListMutex);
-        shutdownThreads = true;
+        std::lock_guard<std::mutex> lock(sWorkListMutex);
+        sShutdownThreads = true;
         workListCondition.notify_all();
     }
 
-    for (std::thread& thread : threads) {
+    for (std::thread& thread : sThreads) {
         thread.join();
     }
-    threads.erase(threads.begin(), threads.end());
-    shutdownThreads = false;
+    sThreads.erase(sThreads.begin(), sThreads.end());
+    sShutdownThreads = false;
 }
 
 } // namespace elma

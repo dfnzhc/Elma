@@ -14,14 +14,14 @@ namespace elma {
 // given a seed, we can initialize many different streams of RNGs
 // that have different independent random numbers.
 
-struct pcg32_state
+struct Pcg32State
 {
     uint64_t state;
     uint64_t inc;
 };
 
 // http://www.pcg-random.org/download.html
-inline uint32_t next_pcg32(pcg32_state& rng)
+inline uint32_t NextPcg32(Pcg32State& rng)
 {
     uint64_t oldstate = rng.state;
     // Advance internal state
@@ -33,24 +33,24 @@ inline uint32_t next_pcg32(pcg32_state& rng)
 }
 
 // https://github.com/wjakob/pcg32/blob/master/pcg32.h#L47
-inline pcg32_state init_pcg32(uint64_t stream_id = 1, uint64_t seed = 0x31e241f862a1fb5eULL)
+inline Pcg32State InitPcg32(uint64_t stream_id = 1, uint64_t seed = 0x31e241f862a1fb5eULL)
 {
-    pcg32_state s;
+    Pcg32State s;
     s.state = 0U;
     s.inc   = (stream_id << 1u) | 1u;
-    next_pcg32(s);
+    NextPcg32(s);
     s.state += seed;
-    next_pcg32(s);
+    NextPcg32(s);
     return s;
 }
 
-template<typename T> T next_pcg32_real(pcg32_state& rng)
+template<typename T> T NextPcg32Real(Pcg32State& rng)
 {
     return T(0);
 }
 
 // https://github.com/wjakob/pcg32/blob/master/pcg32.h
-template<> float next_pcg32_real(pcg32_state& rng)
+template<> float NextPcg32Real(Pcg32State& rng)
 {
     union
     {
@@ -58,24 +58,24 @@ template<> float next_pcg32_real(pcg32_state& rng)
         float f;
     } x;
 
-    x.u = (next_pcg32(rng) >> 9) | 0x3f800000u;
+    x.u = (NextPcg32(rng) >> 9) | 0x3f800000u;
     return x.f - 1.0f;
 }
 
 // https://github.com/wjakob/pcg32/blob/master/pcg32.h
-template<> double next_pcg32_real(pcg32_state& rng)
+template<> double NextPcg32Real(Pcg32State& rng)
 {
     union
     {
         uint64_t u;
         double d;
-    } x;
+    } x{};
 
-    x.u = ((uint64_t)next_pcg32(rng) << 20) | 0x3ff0000000000000ULL;
+    x.u = ((uint64_t)NextPcg32(rng) << 20) | 0x3ff0000000000000ULL;
     return x.d - 1.0;
 }
 
-static inline uint64_t wyhash64_stateless(uint64_t* seed)
+static inline uint64_t wyhash64Stateless(uint64_t* seed)
 {
     *seed += UINT64_C(0x60bee2bee120fc15);
     __uint128_t tmp;
@@ -88,10 +88,10 @@ static inline uint64_t wyhash64_stateless(uint64_t* seed)
 
 static inline uint64_t wyhash64(uint64_t val)
 {
-    return wyhash64_stateless(&val);
+    return wyhash64Stateless(&val);
 }
 
-static inline uint32_t wyhash64_cast32(uint32_t val)
+static inline uint32_t wyhash64Cast32(uint32_t val)
 {
     return (uint32_t)wyhash64(uint64_t(val));
 }

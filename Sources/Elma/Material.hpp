@@ -26,8 +26,8 @@ struct Lambertian
 /// but that makes the whole renderer architecture too complex.
 struct RoughPlastic
 {
-    Texture<Spectrum> diffuse_reflectance;
-    Texture<Spectrum> specular_reflectance;
+    Texture<Spectrum> diffuseReflectance;
+    Texture<Spectrum> specularReflectance;
     Texture<Real> roughness;
 
     // Note that the material is not transmissive.
@@ -42,8 +42,8 @@ struct RoughPlastic
 /// This gives a glossy/specular transmissive BSDF.
 struct RoughDielectric
 {
-    Texture<Spectrum> specular_reflectance;
-    Texture<Spectrum> specular_transmittance;
+    Texture<Spectrum> specularReflectance;
+    Texture<Spectrum> specularTransmittance;
     Texture<Real> roughness;
 
     Real eta; // internal IOR / externalIOR
@@ -52,7 +52,7 @@ struct RoughDielectric
 /// For homework 1: the diffuse and subsurface component of the Disney BRDF.
 struct DisneyDiffuse
 {
-    Texture<Spectrum> base_color;
+    Texture<Spectrum> baseColor;
     Texture<Real> roughness;
     Texture<Real> subsurface;
 };
@@ -60,7 +60,7 @@ struct DisneyDiffuse
 /// For homework 1: the metallic component of the Disney BRDF.
 struct DisneyMetal
 {
-    Texture<Spectrum> base_color;
+    Texture<Spectrum> baseColor;
     Texture<Real> roughness;
     Texture<Real> anisotropic;
 };
@@ -68,7 +68,7 @@ struct DisneyMetal
 /// For homework 1: the transmissive component of the Disney BRDF.
 struct DisneyGlass
 {
-    Texture<Spectrum> base_color;
+    Texture<Spectrum> baseColor;
     Texture<Real> roughness;
     Texture<Real> anisotropic;
 
@@ -78,31 +78,31 @@ struct DisneyGlass
 /// For homework 1: the clearcoat component of the Disney BRDF.
 struct DisneyClearcoat
 {
-    Texture<Real> clearcoat_gloss;
+    Texture<Real> clearcoatGloss;
 };
 
 /// For homework 1: the sheen component of the Disney BRDF.
 struct DisneySheen
 {
-    Texture<Spectrum> base_color;
-    Texture<Real> sheen_tint;
+    Texture<Spectrum> baseColor;
+    Texture<Real> sheenTint;
 };
 
 /// For homework 1: the whole Disney BRDF.
 struct DisneyBSDF
 {
-    Texture<Spectrum> base_color;
-    Texture<Real> specular_transmission;
+    Texture<Spectrum> baseColor;
+    Texture<Real> specularTransmission;
     Texture<Real> metallic;
     Texture<Real> subsurface;
     Texture<Real> specular;
     Texture<Real> roughness;
-    Texture<Real> specular_tint;
+    Texture<Real> specularTint;
     Texture<Real> anisotropic;
     Texture<Real> sheen;
-    Texture<Real> sheen_tint;
+    Texture<Real> sheenTint;
     Texture<Real> clearcoat;
-    Texture<Real> clearcoat_gloss;
+    Texture<Real> clearcoatGloss;
 
     Real eta;
 };
@@ -134,7 +134,7 @@ enum class TransportDirection
 /// When the transport direction is towards the lights,
 /// dir_in is the view direction, and dir_out is the light direction.
 /// Vice versa.
-Spectrum eval(const Material& material,
+Spectrum Eval(const Material& material,
               const Vector3& dir_in,
               const Vector3& dir_out,
               const PathVertex& vertex,
@@ -143,7 +143,7 @@ Spectrum eval(const Material& material,
 
 struct BSDFSampleRecord
 {
-    Vector3 dir_out;
+    Vector3 dirOut;
     // The index of refraction ratio. Set to 0 if it's not a transmission event.
     Real eta;
     Real roughness; // Roughness of the selected BRDF layer ([0, 1]).
@@ -156,28 +156,28 @@ struct BSDFSampleRecord
 /// failed (e.g., if the incoming direction is invalid).
 /// If dir == TO_LIGHT, incoming direction is the view direction and
 /// we're sampling for the light direction. Vice versa.
-std::optional<BSDFSampleRecord> sample_bsdf(const Material& material,
-                                            const Vector3& dir_in,
-                                            const PathVertex& vertex,
-                                            const TexturePool& texture_pool,
-                                            const Vector2& rnd_param_uv,
-                                            const Real& rnd_param_w,
-                                            TransportDirection dir = TransportDirection::TO_LIGHT);
+std::optional<BSDFSampleRecord> SampleBSDF(const Material& material,
+                                           const Vector3& dir_in,
+                                           const PathVertex& vertex,
+                                           const TexturePool& texture_pool,
+                                           const Vector2& rnd_param_uv,
+                                           const Real& rnd_param_w,
+                                           TransportDirection dir = TransportDirection::TO_LIGHT);
 
 /// Given incoming direction and outgoing direction of lights,
 /// both pointing outwards of the surface point,
 /// outputs the probability density of sampling.
 /// If dir == TO_LIGHT, incoming direction is dir_view and
 /// we're sampling for dir_light. Vice versa.
-Real pdf_sample_bsdf(const Material& material,
-                     const Vector3& dir_in,
-                     const Vector3& dir_out,
-                     const PathVertex& vertex,
-                     const TexturePool& texture_pool,
-                     TransportDirection dir = TransportDirection::TO_LIGHT);
+Real PdfSampleBSDF(const Material& material,
+                   const Vector3& dir_in,
+                   const Vector3& dir_out,
+                   const PathVertex& vertex,
+                   const TexturePool& texture_pool,
+                   TransportDirection dir = TransportDirection::TO_LIGHT);
 
 /// Return a texture from the material for debugging.
 /// If the material contains multiple textures, return an arbitrary one.
-TextureSpectrum get_texture(const Material& material);
+TextureSpectrum GetTexture(const Material& material);
 
 } // namespace elma

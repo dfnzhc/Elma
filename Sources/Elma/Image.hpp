@@ -44,29 +44,29 @@ using Image4f = Image<Vector4f>;
 /// Read from an 1 channel image. If the image is not actually
 /// single channel, the first channel is used.
 /// Supported formats: JPG, PNG, TGA, BMP, PSD, GIF, HDR, PIC
-Image1 imread1(const fs::path& filename);
+Image1 ImageRead1(const fs::path& filename);
 /// Read from a 3 channels image.
 /// If the image only has 1 channel, we set all 3 channels to the same color.
 /// If the image has more than 3 channels, we truncate it to 3.
 /// Undefined behavior if the image has 2 channels (does that even happen?)
 /// Supported formats: JPG, PNG, TGA, BMP, PSD, GIF, HDR, PIC
-Image3 imread3(const fs::path& filename);
+Image3 ImageRead3(const fs::path& filename);
 
 /// Save an image to a file.
 /// Supported formats: PFM & exr
-void imwrite(const fs::path& filename, const Image3& image);
+void ImageWrite(const fs::path& filename, const Image3& image);
 
-inline Image3 to_image3(const Image1& img)
+inline Image3 ToImage3(const Image1& img)
 {
     Image3 out(img.width, img.height);
     std::transform(img.data.cbegin(), img.data.cend(), out.data.begin(), [](Real v) { return Vector3(v, v, v); });
     return out;
 }
 
-inline Image1 to_image1(const Image3& img)
+inline Image1 ToImage1(const Image3& img)
 {
     Image1 out(img.width, img.height);
-    std::transform(img.data.cbegin(), img.data.cend(), out.data.begin(), [](const Vector3& v) { return average(v); });
+    std::transform(img.data.cbegin(), img.data.cend(), out.data.begin(), [](const Vector3& v) { return Average(v); });
     return out;
 }
 

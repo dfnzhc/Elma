@@ -1,4 +1,4 @@
-Vector2 sample_op::operator()(const Tent& filter) const
+Vector2 SampleOp::operator()(const Tent& filter) const
 {
     // Tent filter can be sampled through two parts:
     // the positive part is     k(x) = (1 - x / half_width) / normalization
@@ -27,7 +27,7 @@ Vector2 sample_op::operator()(const Tent& filter) const
     // when v = 0, x = 0, v = 1, x = h
 
     Real h = filter.width / 2;
-    Real x = rnd_param[0] < 0.5 ? h * (sqrt(2 * rnd_param[0]) - 1) : h * (1 - sqrt(1 - 2 * (rnd_param[0] - Real(0.5))));
-    Real y = rnd_param[1] < 0.5 ? h * (sqrt(2 * rnd_param[1]) - 1) : h * (1 - sqrt(1 - 2 * (rnd_param[1] - Real(0.5))));
+    Real x = rndParam[0] < 0.5 ? h * (sqrt(2 * rndParam[0]) - 1) : h * (1 - sqrt(1 - 2 * (rndParam[0] - Real(0.5))));
+    Real y = rndParam[1] < 0.5 ? h * (sqrt(2 * rndParam[1]) - 1) : h * (1 - sqrt(1 - 2 * (rndParam[1] - Real(0.5))));
     return Vector2{x, y};
 }

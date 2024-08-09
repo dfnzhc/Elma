@@ -1,18 +1,18 @@
-Spectrum eval_op::operator()(const IsotropicPhase&) const
+Spectrum EvalOp::operator()(const IsotropicPhase&) const
 {
-    return make_const_spectrum(c_INVFOURPI);
+    return MakeConstSpectrum(kInvFourPi);
 }
 
-std::optional<Vector3> sample_phase_function_op::operator()(const IsotropicPhase&) const
+std::optional<Vector3> SamplePhaseFunctionOp::operator()(const IsotropicPhase&) const
 {
     // Uniform sphere sampling
-    Real z   = 1 - 2 * rnd_param.x;
+    Real z   = 1 - 2 * randParam.x;
     Real r   = std::sqrt(std::fmax(Real(0), 1 - z * z));
-    Real phi = 2 * c_PI * rnd_param.y;
+    Real phi = 2 * kPi * randParam.y;
     return Vector3{r * std::cos(phi), r * std::sin(phi), z};
 }
 
-Real pdf_sample_phase_op::operator()(const IsotropicPhase&) const
+Real PdfSamplePhaseOp::operator()(const IsotropicPhase&) const
 {
-    return c_INVFOURPI;
+    return kInvFourPi;
 }

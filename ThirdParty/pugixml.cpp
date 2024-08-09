@@ -11369,7 +11369,7 @@ PUGI__NS_BEGIN
 				break;
 
 			case 't':
-				if (name == PUGIXML_TEXT("translate") && argc == 3)
+				if (name == PUGIXML_TEXT("Translate") && argc == 3)
 					return alloc_node(ast_func_translate, xpath_type_string, args[0], args[1]);
 				else if (name == PUGIXML_TEXT("true") && argc == 0)
 					return alloc_node(ast_func_true, xpath_type_boolean);

@@ -47,17 +47,17 @@ Application::Application(const AppConfig& config)
     /// 创建初始化各种部件
 
     embreeDevice = rtcNewDevice(nullptr);
-    parallel_init(config.numThreads);
+    ParallelInit(config.numThreads);
 
     timer = std::make_unique<Timer>();
     {
         tick(*timer);
         LogInfo("解析并构造场景 '{}'...", config.inputSceneFilename);
-        scene = parse_scene(config.inputSceneFilename, embreeDevice);
+        scene = ParseScene(config.inputSceneFilename, embreeDevice);
         LogInfo("场景构造完成，花费 '{}' 秒", tick(*timer));
     }
 
-    scene->options.samples_per_pixel = 1;
+    scene->options.samplesPerPixel = 1;
 
     auto windowDesc   = config.windowDesc;
     windowDesc.width  = scene->camera.width;
@@ -76,7 +76,7 @@ Application::Application(const AppConfig& config)
 
 Application::~Application()
 {
-    parallel_cleanup();
+    ParallelCleanup();
     rtcReleaseDevice(embreeDevice);
 
     ImGui_ImplOpenGL3_Shutdown();
@@ -114,10 +114,10 @@ void Application::renderFrame()
     const auto h = scene->camera.height;
 
     glViewport(0, 0, w, h);
-    const auto img = render(*scene);
+    const auto img = Render(*scene);
 
     renderRec.accCount              += 1;
-    scene->options.accumulate_count += 1;
+    scene->options.accumulateCount  += 1;
 
     Real f = Real(1.0) / (std::max(0.001, renderRec.accCount));
     for (int y = 0; y < h; ++y) {

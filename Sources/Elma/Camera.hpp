@@ -8,7 +8,7 @@
 
 namespace elma {
 
-/// Currently we only support a pinhole perspective camera
+/// Currently we only support a pinhole Perspective camera
 struct Camera
 {
     Camera() { }
@@ -20,16 +20,15 @@ struct Camera
            const Filter& filter,
            int medium_id);
 
-    Matrix4x4 sample_to_cam, cam_to_sample;
-    Matrix4x4 cam_to_world, world_to_cam;
+    Matrix4x4 sampleToCam, camToSample;
+    Matrix4x4 camToWorld, worldToCam;
     int width, height;
     Filter filter;
 
-    int medium_id; // for participating media rendering in homework 2
+    int mediumId; // for participating media rendering in homework 2
 };
 
-/// Given screen position in [0, 1] x [0, 1],
-/// generate a camera ray.
-Ray sample_primary(const Camera& camera, const Vector2& screen_pos);
+/// 从 [0, 1] x [0, 1] 的屏幕位置生成相机光线(Primary Ray)
+Ray SamplePrimary(const Camera& camera, const Vector2& screen_pos);
 
 } // namespace elma

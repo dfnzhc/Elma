@@ -1,6 +1,6 @@
 #include "ParsePly.hpp"
-#include "Error.hpp"
 #include "Transform.hpp"
+#include "Common/Error.hpp"
 #define TINYPLY_IMPLEMENTATION
 #include <tinyply.h>
 
@@ -8,7 +8,7 @@
 
 namespace elma {
 
-TriangleMesh parse_ply(const fs::path& filename, const Matrix4x4& to_world)
+TriangleMesh ParsePLY(const fs::path& filename, const Matrix4x4& to_world)
 {
     std::ifstream ifs(filename, std::ios::binary);
     tinyply::PlyFile ply_file;
@@ -18,7 +18,7 @@ TriangleMesh parse_ply(const fs::path& filename, const Matrix4x4& to_world)
     try {
         vertices = ply_file.request_properties_from_element("vertex", {"x", "y", "z"});
     } catch (const std::exception& e) {
-        Error(std::string("Vertex positions not found in ") + filename.string());
+        ELMA_THROW("没有找到顶点位置数据：{}", filename.string());
     }
     try {
         uvs = ply_file.request_properties_from_element("vertex", {"u", "v"});
@@ -33,7 +33,7 @@ TriangleMesh parse_ply(const fs::path& filename, const Matrix4x4& to_world)
     try {
         faces = ply_file.request_properties_from_element("face", {"vertex_indices"});
     } catch (const std::exception& e) {
-        Error(std::string("Vertex indices not found in ") + filename.string());
+        ELMA_THROW("没有找到顶点索引数据：{}", filename.string());
     }
 
     ply_file.read(ifs);
@@ -43,13 +43,13 @@ TriangleMesh parse_ply(const fs::path& filename, const Matrix4x4& to_world)
     if (vertices->t == tinyply::Type::FLOAT32) {
         float* data = (float*)vertices->buffer.get();
         for (size_t i = 0; i < vertices->count; i++) {
-            mesh.positions[i] = xform_point(to_world, Vector3{data[3 * i], data[3 * i + 1], data[3 * i + 2]});
+            mesh.positions[i] = TransformPoint(to_world, Vector3{data[3 * i], data[3 * i + 1], data[3 * i + 2]});
         }
     }
     else if (vertices->t == tinyply::Type::FLOAT64) {
         double* data = (double*)vertices->buffer.get();
         for (size_t i = 0; i < vertices->count; i++) {
-            mesh.positions[i] = xform_point(to_world, Vector3{data[3 * i], data[3 * i + 1], data[3 * i + 2]});
+            mesh.positions[i] = TransformPoint(to_world, Vector3{data[3 * i], data[3 * i + 1], data[3 * i + 2]});
         }
     }
     if (uvs) {
@@ -73,14 +73,14 @@ TriangleMesh parse_ply(const fs::path& filename, const Matrix4x4& to_world)
             float* data = (float*)normals->buffer.get();
             for (size_t i = 0; i < normals->count; i++) {
                 mesh.normals[i] =
-                    xform_normal(inverse(to_world), Vector3{data[3 * i], data[3 * i + 1], data[3 * i + 2]});
+                    TransformNormal(Inverse(to_world), Vector3{data[3 * i], data[3 * i + 1], data[3 * i + 2]});
             }
         }
         else if (normals->t == tinyply::Type::FLOAT64) {
             double* data = (double*)normals->buffer.get();
             for (size_t i = 0; i < normals->count; i++) {
                 mesh.normals[i] =
-                    xform_normal(inverse(to_world), Vector3{data[3 * i], data[3 * i + 1], data[3 * i + 2]});
+                    TransformNormal(Inverse(to_world), Vector3{data[3 * i], data[3 * i + 1], data[3 * i + 2]});
             }
         }
     }

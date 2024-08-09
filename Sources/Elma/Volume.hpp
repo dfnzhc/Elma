@@ -20,9 +20,9 @@ template<typename T> struct GridVolume
 {
     Vector3i resolution;
     // the bounding box of the grid
-    Vector3 p_min, p_max;
+    Vector3 posMin, posMax;
     std::vector<T> data;
-    T max_data;
+    T maxData;
     Real scale = 1;
 };
 
@@ -30,7 +30,7 @@ template<typename T> using Volume = std::variant<ConstantVolume<T>, GridVolume<T
 using Volume1                     = Volume<Real>;
 using VolumeSpectrum              = Volume<Spectrum>;
 
-template<typename T> struct eval_volume_op
+template<typename T> struct EvalVolumeOp
 {
     T operator()(const ConstantVolume<T>& v) const;
     T operator()(const GridVolume<T>& v) const;
@@ -38,17 +38,17 @@ template<typename T> struct eval_volume_op
     const Vector3& p;
 };
 
-template<typename T> T eval_volume_op<T>::operator()(const ConstantVolume<T>& v) const
+template<typename T> T EvalVolumeOp<T>::operator()(const ConstantVolume<T>& v) const
 {
     return v.value;
 }
 
-template<typename T> T eval_volume_op<T>::operator()(const GridVolume<T>& v) const
+template<typename T> T EvalVolumeOp<T>::operator()(const GridVolume<T>& v) const
 {
     // Trilinear interpolation
-    Vector3 pn = (p - v.p_min) / (v.p_max - v.p_min);
+    Vector3 pn = (p - v.posMin) / (v.posMax - v.posMin);
     if (pn.x < 0 || pn.x > 1 || pn.y < 0 || pn.y > 1 || pn.z < 0 || pn.z > 1) {
-        return make_zero_spectrum();
+        return MakeZeroSpectrum();
     }
     pn.x    *= Real(v.resolution.x - 1);
     pn.y    *= Real(v.resolution.y - 1);
@@ -77,23 +77,23 @@ template<typename T> T eval_volume_op<T>::operator()(const GridVolume<T>& v) con
             v101 * (dx * (1 - dy) * dz) + v110 * ((1 - dx) * dy * dz) + v111 * (dx * dy * dz));
 }
 
-template<typename T> struct max_value_op
+template<typename T> struct MaxValueOp
 {
     T operator()(const ConstantVolume<T>& v) const;
     T operator()(const GridVolume<T>& v) const;
 };
 
-template<typename T> T max_value_op<T>::operator()(const ConstantVolume<T>& v) const
+template<typename T> T MaxValueOp<T>::operator()(const ConstantVolume<T>& v) const
 {
     return v.value;
 }
 
-template<typename T> T max_value_op<T>::operator()(const GridVolume<T>& v) const
+template<typename T> T MaxValueOp<T>::operator()(const GridVolume<T>& v) const
 {
-    return v.scale * v.max_data;
+    return v.scale * v.maxData;
 }
 
-template<typename T> struct set_scale_op
+template<typename T> struct SetScaleOp
 {
     void operator()(ConstantVolume<T>& v) const;
     void operator()(GridVolume<T>& v) const;
@@ -101,17 +101,17 @@ template<typename T> struct set_scale_op
     Real scale;
 };
 
-template<typename T> void set_scale_op<T>::operator()(ConstantVolume<T>& v) const
+template<typename T> void SetScaleOp<T>::operator()(ConstantVolume<T>& v) const
 {
     v.value *= scale;
 }
 
-template<typename T> void set_scale_op<T>::operator()(GridVolume<T>& v) const
+template<typename T> void SetScaleOp<T>::operator()(GridVolume<T>& v) const
 {
     v.scale = scale;
 }
 
-template<typename T> struct intersect_op
+template<typename T> struct IntersectOp
 {
     bool operator()(const ConstantVolume<T>& v) const;
     bool operator()(const GridVolume<T>& v) const;
@@ -119,18 +119,18 @@ template<typename T> struct intersect_op
     const Ray& ray;
 };
 
-template<typename T> bool intersect_op<T>::operator()(const ConstantVolume<T>& v) const
+template<typename T> bool IntersectOp<T>::operator()(const ConstantVolume<T>& v) const
 {
     return true;
 }
 
-template<typename T> bool intersect_op<T>::operator()(const GridVolume<T>& v) const
+template<typename T> bool IntersectOp<T>::operator()(const GridVolume<T>& v) const
 {
     // https://github.com/mmp/pbrt-v3/blob/master/src/core/geometry.h#L1388
-    Real t0 = 0, t1 = ray.tfar;
+    Real t0 = 0, t1 = ray.tFar;
     for (int i = 0; i < 3; i++) {
-        Real tnear = (v.p_min[i] - ray.org[i]) / ray.dir[i];
-        Real tfar  = (v.p_max[i] - ray.org[i]) / ray.dir[i];
+        Real tnear = (v.posMin[i] - ray.org[i]) / ray.dir[i];
+        Real tfar  = (v.posMax[i] - ray.org[i]) / ray.dir[i];
 
         // Update parametric interval from slab intersection $t$ values
         if (tnear > tfar) {
@@ -146,33 +146,33 @@ template<typename T> bool intersect_op<T>::operator()(const GridVolume<T>& v) co
     return true;
 }
 
-template<typename T> T lookup(const Volume<T>& volume, const Vector3& p)
+template<typename T> T Lookup(const Volume<T>& volume, const Vector3& p)
 {
-    return std::visit(eval_volume_op<T>{p}, volume);
+    return std::visit(EvalVolumeOp<T>{p}, volume);
 }
 
-template<typename T> T get_max_value(const Volume<T>& volume)
+template<typename T> T GetMaxValue(const Volume<T>& volume)
 {
-    return std::visit(max_value_op<T>{}, volume);
+    return std::visit(MaxValueOp<T>{}, volume);
 }
 
-template<typename T> void set_scale(Volume<T>& v, Real scale)
+template<typename T> void SetScale(Volume<T>& v, Real scale)
 {
-    std::visit(set_scale_op<T>{scale}, v);
+    std::visit(SetScaleOp<T>{scale}, v);
 }
 
-template<typename T> bool intersect(const Volume<T>& v, const Ray& ray)
+template<typename T> bool Intersect(const Volume<T>& v, const Ray& ray)
 {
-    return std::visit(intersect_op<T>{ray}, v);
+    return std::visit(IntersectOp<T>{ray}, v);
 }
 
-template<typename T> GridVolume<T> load_volume_from_file(const fs::path& filename)
+template<typename T> GridVolume<T> LoadVolumeFromFile(const fs::path& filename)
 {
     return GridVolume<T>{};
 }
 
-template<> GridVolume<Real> load_volume_from_file(const fs::path& filename);
+template<> GridVolume<Real> LoadVolumeFromFile(const fs::path& filename);
 
-template<> GridVolume<Spectrum> load_volume_from_file(const fs::path& filename);
+template<> GridVolume<Spectrum> LoadVolumeFromFile(const fs::path& filename);
 
 } // namespace elma

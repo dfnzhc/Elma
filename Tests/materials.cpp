@@ -16,8 +16,8 @@ Real compute_determinant(
         exit(1);
         return 0;
     }
-    Vector3 dir_u = (sample_u->dir_out - sample->dir_out) / eps;
-    Vector3 dir_v = (sample_v->dir_out - sample->dir_out) / eps;
+    Vector3 dir_u = (sample_u->dirOut - sample->dirOut) / eps;
+    Vector3 dir_v = (sample_v->dirOut - sample->dirOut) / eps;
     // We have a 3x2 matrix
     // [dx/du dy/du dz/du]
     // [dx/dv dy/dv dz/dv]
@@ -41,15 +41,15 @@ int main(int argc, char* argv[])
     Real rnd_param_w{Real(0.6)};
     Vector3 dir_in = normalize(Vector3{0.3, 0.4, 0.5});
     PathVertex vertex;
-    vertex.geometric_normal = Vector3{0, 0, 1};
-    vertex.shading_frame    = Frame(vertex.geometric_normal);
+    vertex.normal           = Vector3{0, 0, 1};
+    vertex.shadingFrame     = Frame(vertex.normal);
     {
         Material m = Lambertian{ConstantTexture<Spectrum>{Vector3{Real(0.5), Real(0.5), Real(0.5)}}};
 
         Real det = compute_determinant(m, vertex, dir_in, rnd_param_uv, rnd_param_w);
         std::optional<BSDFSampleRecord> sample =
             sample_bsdf(m, dir_in, vertex, TexturePool(), rnd_param_uv, rnd_param_w);
-        Real pdf = pdf_sample_bsdf(m, dir_in, sample->dir_out, vertex, TexturePool());
+        Real pdf = pdf_sample_bsdf(m, dir_in, sample->dirOut, vertex, TexturePool());
         if (fabs((1 / det) - pdf) / fabs(pdf) > Real(1e-2)) {
             printf("FAIL\n");
             return 1;
@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
         Real det1 = compute_determinant(m, vertex, dir_in, rnd_param_uv, Real(1));
         std::optional<BSDFSampleRecord> sample =
             sample_bsdf(m, dir_in, vertex, TexturePool(), rnd_param_uv, Real(0) /* w shouldn't matter here */);
-        Real pdf = pdf_sample_bsdf(m, dir_in, sample->dir_out, vertex, TexturePool());
+        Real pdf = pdf_sample_bsdf(m, dir_in, sample->dirOut, vertex, TexturePool());
         if (fabs(((1 / det0) + (1 / det1)) / 2 - pdf) / fabs(pdf) > Real(1e-2)) {
             printf("FAIL\n");
             return 1;
@@ -85,15 +85,15 @@ int main(int argc, char* argv[])
             Real det0 = compute_determinant(m, vertex, dir_in, rnd_param_uv, Real(0));
             std::optional<BSDFSampleRecord> sample_0 =
                 sample_bsdf(m, dir_in, vertex, TexturePool(), rnd_param_uv, Real(0));
-            Real pdf0 = pdf_sample_bsdf(m, dir_in, sample_0->dir_out, vertex, TexturePool());
+            Real pdf0 = pdf_sample_bsdf(m, dir_in, sample_0->dirOut, vertex, TexturePool());
             // Unfortunately we need to manually add the Fresnel term
-            bool reflect = dot(vertex.geometric_normal, dir_in) * dot(vertex.geometric_normal, sample_0->dir_out) > 0;
+            bool reflect = dot(vertex.normal, dir_in) * dot(vertex.normal, sample_0->dirOut) > 0;
             Vector3 half_vector;
             if (reflect) {
-                half_vector = normalize(dir_in + sample_0->dir_out);
+                half_vector = normalize(dir_in + sample_0->dirOut);
             }
             else {
-                half_vector = normalize(dir_in + sample_0->dir_out * Real(1.5));
+                half_vector = normalize(dir_in + sample_0->dirOut * Real(1.5));
             }
             Real h_dot_in = dot(half_vector, dir_in);
             Real F        = fresnel_dielectric(h_dot_in, Real(1.5));
@@ -115,15 +115,15 @@ int main(int argc, char* argv[])
             Real det1 = compute_determinant(m, vertex, dir_in, rnd_param_uv, Real(1));
             std::optional<BSDFSampleRecord> sample_1 =
                 sample_bsdf(m, dir_in, vertex, TexturePool(), rnd_param_uv, Real(1));
-            Real pdf1 = pdf_sample_bsdf(m, dir_in, sample_1->dir_out, vertex, TexturePool());
+            Real pdf1 = pdf_sample_bsdf(m, dir_in, sample_1->dirOut, vertex, TexturePool());
             // Unfortunately we need to manually add the Fresnel term
-            bool reflect = dot(vertex.geometric_normal, dir_in) * dot(vertex.geometric_normal, sample_1->dir_out) > 0;
+            bool reflect = dot(vertex.normal, dir_in) * dot(vertex.normal, sample_1->dirOut) > 0;
             Vector3 half_vector;
             if (reflect) {
-                half_vector = normalize(dir_in + sample_1->dir_out);
+                half_vector = normalize(dir_in + sample_1->dirOut);
             }
             else {
-                half_vector = normalize(dir_in + sample_1->dir_out * Real(1.5));
+                half_vector = normalize(dir_in + sample_1->dirOut * Real(1.5));
             }
             Real h_dot_in = dot(half_vector, dir_in);
             Real F        = fresnel_dielectric(h_dot_in, Real(1.5));

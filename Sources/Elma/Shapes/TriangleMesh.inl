@@ -1,4 +1,4 @@
-uint32_t register_embree_op::operator()(const TriangleMesh &mesh) const {
+uint32_t RegisterEmbreeOp::operator()(const TriangleMesh &mesh) const {
     RTCGeometry rtc_geom = rtcNewGeometry(device, RTC_GEOMETRY_TYPE_TRIANGLE);
     // A geomID is the ID associated with the shape inside Embree.
     uint32_t geomID = rtcAttachGeometry(scene, rtc_geom);
@@ -21,8 +21,8 @@ uint32_t register_embree_op::operator()(const TriangleMesh &mesh) const {
     return geomID;
 }
 
-PointAndNormal sample_point_on_shape_op::operator()(const TriangleMesh &mesh) const {
-    int tri_id = sample(mesh.triangle_sampler, w);
+PointAndNormal SamplePointOnShapeOp::operator()(const TriangleMesh &mesh) const {
+    int tri_id = Sample(mesh.triangleSampler, w);
     assert(tri_id >= 0 && tri_id < (int)mesh.indices.size());
     Vector3i index = mesh.indices[tri_id];
     Vector3 v0 = mesh.positions[index[0]];
@@ -34,7 +34,7 @@ PointAndNormal sample_point_on_shape_op::operator()(const TriangleMesh &mesh) co
     Real a = std::sqrt(std::clamp(uv[0], Real(0), Real(1)));
     Real b1 = 1 - a;
     Real b2 = a * uv[1];
-    Vector3 geometric_normal = normalize(cross(e1, e2));
+    Vector3 geometric_normal = normalize(Cross(e1, e2));
     // Flip the geometric normal to the same side as the shading normal
     if (mesh.normals.size() > 0) {
         Vector3 n0 = mesh.normals[index[0]];
@@ -42,22 +42,22 @@ PointAndNormal sample_point_on_shape_op::operator()(const TriangleMesh &mesh) co
         Vector3 n2 = mesh.normals[index[2]];
         Vector3 shading_normal = normalize(
             (1 - b1 - b2) * n0 + b1 * n1 + b2 * n2);
-        if (dot(geometric_normal, shading_normal) < 0) {
+        if (Dot(geometric_normal, shading_normal) < 0) {
             geometric_normal = -geometric_normal;
         }
     }
     return PointAndNormal{v0 + (e1 * b1) + (e2 * b2), geometric_normal};
 }
 
-Real surface_area_op::operator()(const TriangleMesh &mesh) const {
-    return mesh.total_area;
+Real SurfaceAreaOp::operator()(const TriangleMesh &mesh) const {
+    return mesh.totalArea;
 }
 
-Real pdf_point_on_shape_op::operator()(const TriangleMesh &mesh) const {
-    return 1 / surface_area_op{}(mesh);
+Real PdfPointOnShapeOp::operator()(const TriangleMesh &mesh) const {
+    return 1 / SurfaceAreaOp{}(mesh);
 }
 
-void init_sampling_dist_op::operator()(TriangleMesh &mesh) const {
+void InitSamplingDistOp::operator()(TriangleMesh &mesh) const {
     std::vector<Real> tri_areas(mesh.indices.size(), Real(0));
     Real total_area = 0;
     for (int tri_id = 0; tri_id < (int)mesh.indices.size(); tri_id++) {
@@ -67,17 +67,17 @@ void init_sampling_dist_op::operator()(TriangleMesh &mesh) const {
         Vector3 v2 = mesh.positions[index[2]];
         Vector3 e1 = v1 - v0;
         Vector3 e2 = v2 - v0;
-        tri_areas[tri_id] = length(cross(e1, e2)) / 2;
+        tri_areas[tri_id] = Length(Cross(e1, e2)) / 2;
         total_area += tri_areas[tri_id];
     }
-    mesh.triangle_sampler = make_table_dist_1d(tri_areas);
-    mesh.total_area = total_area;
+    mesh.triangleSampler  = MakeTableDist1d(tri_areas);
+    mesh.totalArea        = total_area;
 }
 
-ShadingInfo compute_shading_info_op::operator()(const TriangleMesh &mesh) const {
+ShadingInfo ComputeShadingInfoOp::operator()(const TriangleMesh &mesh) const {
     // Get UVs of the three vertices
-    assert(vertex.primitive_id >= 0);
-    Vector3i index = mesh.indices[vertex.primitive_id];
+    assert(vertex.primitiveId >= 0);
+    Vector3i index = mesh.indices[vertex.primitiveId];
     Vector2 uvs[3];
     if (mesh.uvs.size() > 0) {
         uvs[0] = mesh.uvs[index[0]];
@@ -127,12 +127,12 @@ ShadingInfo compute_shading_info_op::operator()(const TriangleMesh &mesh) const 
         dpdv = dpds * dsdv + dpdt * dtdv;
     } else {
         // degenerate uvs. Use an arbitrary coordinate system
-        std::tie(dpdu, dpdv) = coordinate_system(vertex.geometric_normal);
+        std::tie(dpdu, dpdv) = CoordinateSystem(vertex.normal);
     }
 
     // Now let's get the shading normal & mean_curvature.
     // By default it is the geometry normal and we have zero curvature.
-    Vector3 shading_normal = vertex.geometric_normal;
+    Vector3 shading_normal = vertex.normal;
     Real mean_curvature = 0;
     Vector3 tangent, bitangent;
     // However if we have vertex normals, that overrides the geometry normal.
@@ -146,7 +146,7 @@ ShadingInfo compute_shading_info_op::operator()(const TriangleMesh &mesh) const 
                                 vertex.st[1] * n2);
         // dpdu may not be orthogonal to shading normal:
         // subtract the projection of shading_normal onto dpdu to make them orthogonal
-        tangent = normalize(dpdu - shading_normal * dot(shading_normal, dpdu));
+        tangent = normalize(dpdu - shading_normal * Dot(shading_normal, dpdu));
 
         // We want to compute dn/du & dn/dv for mean curvature.
         // This is computed in a similar way to dpdu.
@@ -155,15 +155,13 @@ ShadingInfo compute_shading_info_op::operator()(const TriangleMesh &mesh) const 
         Vector3 dndt = n2 - n1;
         Vector3 dndu = dnds * dsdu + dndt * dtdu;
         Vector3 dndv = dnds * dsdv + dndt * dtdv;
-        bitangent = normalize(cross(shading_normal, tangent));
-        mean_curvature = (dot(dndu, tangent) + 
-                          dot(dndv, bitangent)) / Real(2);
+        bitangent = normalize(Cross(shading_normal, tangent));
+        mean_curvature = (Dot(dndu, tangent) + Dot(dndv, bitangent)) / Real(2);
     } else {
-        tangent = normalize(dpdu - shading_normal * dot(shading_normal, dpdu));
-        bitangent = normalize(cross(shading_normal, tangent));
+        tangent = normalize(dpdu - shading_normal * Dot(shading_normal, dpdu));
+        bitangent = normalize(Cross(shading_normal, tangent));
     }
 
     Frame shading_frame(tangent, bitangent, shading_normal);
-    return ShadingInfo{uv, shading_frame, mean_curvature,
-                       max(length(dpdu), length(dpdv)) /* inv_uv_size */};
+    return ShadingInfo{uv, shading_frame, mean_curvature, Max(Length(dpdu), Length(dpdv)) /* inv_uv_size */};
 }

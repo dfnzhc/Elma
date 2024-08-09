@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
                                      5 * (img.width * y + x) / Real(1'024),
                                      7 * (img.width * y + x) / Real(1'024)};
             Vector3 diff   = rimg(x, y) - target;
-            if (length(diff) > Real(1e-2)) {
+            if (Length(diff) > Real(1e-2)) {
                 printf("FAIL\n");
                 return 1;
             }

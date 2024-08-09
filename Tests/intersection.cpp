@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
         printf("FAIL\n");
         return 1;
     }
-    if (distance(vertex->position, Vector3{0, 0, -1}) > Real(1e-3)) {
+    if (Distance(vertex->position, Vector3{0, 0, -1}) > Real(1e-3)) {
         printf("FAIL\n");
         return 1;
     }

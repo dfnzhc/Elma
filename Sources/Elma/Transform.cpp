@@ -4,7 +4,7 @@ namespace elma {
 
 /// Much of the code is taken from pbrt https://github.com/mmp/pbrt-v3/tree/master/src
 
-Matrix4x4 translate(const Vector3& delta)
+Matrix4x4 Translate(const Vector3& delta)
 {
     // clang-format off
     return {Real(1), Real(0), Real(0), delta[0],
@@ -14,7 +14,7 @@ Matrix4x4 translate(const Vector3& delta)
     // clang-format on
 }
 
-Matrix4x4 scale(const Vector3& s)
+Matrix4x4 Scale(const Vector3& s)
 {
     // clang-format off
     return {   s[0], Real(0), Real(0), Real(0),
@@ -24,11 +24,11 @@ Matrix4x4 scale(const Vector3& s)
     // clang-format on
 }
 
-Matrix4x4 rotate(Real angle, const Vector3& axis)
+Matrix4x4 Rotate(Real angle, const Vector3& axis)
 {
     Vector3 a = normalize(axis);
-    Real s    = sin(radians(angle));
-    Real c    = cos(radians(angle));
+    Real s    = sin(Radians(angle));
+    Real c    = cos(Radians(angle));
     Matrix4x4 m;
     m(0, 0) = a[0] * a[0] + (1 - a[0] * a[0]) * c;
     m(0, 1) = a[0] * a[1] * (1 - c) - a[2] * s;
@@ -52,13 +52,13 @@ Matrix4x4 rotate(Real angle, const Vector3& axis)
     return m;
 }
 
-Matrix4x4 look_at(const Vector3& pos, const Vector3& look, const Vector3& up)
+Matrix4x4 LookAt(const Vector3& pos, const Vector3& look, const Vector3& up)
 {
     Matrix4x4 m;
     Vector3 dir = normalize(look - pos);
-    assert(length(cross(normalize(up), dir)) != 0);
-    Vector3 left   = normalize(cross(normalize(up), dir));
-    Vector3 new_up = cross(dir, left);
+    assert(Length(Cross(normalize(up), dir)) != 0);
+    Vector3 left   = normalize(Cross(normalize(up), dir));
+    Vector3 new_up = Cross(dir, left);
     
     m(0, 0) = left[0];
     m(1, 0) = left[1];
@@ -79,9 +79,9 @@ Matrix4x4 look_at(const Vector3& pos, const Vector3& look, const Vector3& up)
     return m;
 }
 
-Matrix4x4 perspective(Real fov)
+Matrix4x4 Perspective(Real fov)
 {
-    Real cot = Real(1.0) / tan(radians(fov / 2.0));
+    Real cot = Real(1.0) / tan(Radians(fov / 2.0));
     // clang-format off
     return {    cot, Real(0), Real(0),  Real(0),
             Real(0),     cot, Real(0),  Real(0),
@@ -90,7 +90,7 @@ Matrix4x4 perspective(Real fov)
     // clang-format on
 }
 
-Vector3 xform_point(const Matrix4x4& xform, const Vector3& pt)
+Vector3 TransformPoint(const Matrix4x4& xform, const Vector3& pt)
 {
     Vector4 tpt(xform(0, 0) * pt[0] + xform(0, 1) * pt[1] + xform(0, 2) * pt[2] + xform(0, 3),
                 xform(1, 0) * pt[0] + xform(1, 1) * pt[1] + xform(1, 2) * pt[2] + xform(1, 3),
@@ -100,14 +100,14 @@ Vector3 xform_point(const Matrix4x4& xform, const Vector3& pt)
     return {tpt[0] * inv_w, tpt[1] * inv_w, tpt[2] * inv_w};
 }
 
-Vector3 xform_vector(const Matrix4x4& xform, const Vector3& vec)
+Vector3 TransformVector(const Matrix4x4& xform, const Vector3& vec)
 {
     return {xform(0, 0) * vec[0] + xform(0, 1) * vec[1] + xform(0, 2) * vec[2],
             xform(1, 0) * vec[0] + xform(1, 1) * vec[1] + xform(1, 2) * vec[2],
             xform(2, 0) * vec[0] + xform(2, 1) * vec[1] + xform(2, 2) * vec[2]};
 }
 
-Vector3 xform_normal(const Matrix4x4& inv_xform, const Vector3& n)
+Vector3 TransformNormal(const Matrix4x4& inv_xform, const Vector3& n)
 {
     return normalize(Vector3{inv_xform(0, 0) * n[0] + inv_xform(1, 0) * n[1] + inv_xform(2, 0) * n[2],
                              inv_xform(0, 1) * n[0] + inv_xform(1, 1) * n[1] + inv_xform(2, 1) * n[2],

@@ -1,25 +1,25 @@
 #include "../Microfacet.hpp"
 
-Spectrum eval_op::operator()(const DisneyBSDF& bsdf) const
+Spectrum EvalOp::operator()(const DisneyBSDF& bsdf) const
 {
-    bool reflect = dot(vertex.geometric_normal, dir_in) * dot(vertex.geometric_normal, dir_out) > 0;
+    bool reflect = Dot(vertex.normal, dirIn) * Dot(vertex.normal, dirOut) > 0;
     // Flip the shading frame if it is inconsistent with the geometry normal
-    Frame frame = vertex.shading_frame;
-    if (dot(frame.n, dir_in) * dot(vertex.geometric_normal, dir_in) < 0) {
+    Frame frame = vertex.shadingFrame;
+    if (Dot(frame.n, dirIn) * Dot(vertex.normal, dirIn) < 0) {
         frame = -frame;
     }
     // Homework 1: implement this!
     (void)reflect; // silence unuse warning, remove this when implementing hw
 
-    return make_zero_spectrum();
+    return MakeZeroSpectrum();
 }
 
 Real pdf_sample_bsdf_op::operator()(const DisneyBSDF& bsdf) const
 {
-    bool reflect = dot(vertex.geometric_normal, dir_in) * dot(vertex.geometric_normal, dir_out) > 0;
+    bool reflect = Dot(vertex.normal, dir_in) * Dot(vertex.normal, dir_out) > 0;
     // Flip the shading frame if it is inconsistent with the geometry normal
-    Frame frame = vertex.shading_frame;
-    if (dot(frame.n, dir_in) * dot(vertex.geometric_normal, dir_in) < 0) {
+    Frame frame = vertex.shadingFrame;
+    if (Dot(frame.n, dir_in) * Dot(vertex.normal, dir_in) < 0) {
         frame = -frame;
     }
     // Homework 1: implement this!
@@ -31,8 +31,8 @@ Real pdf_sample_bsdf_op::operator()(const DisneyBSDF& bsdf) const
 std::optional<BSDFSampleRecord> sample_bsdf_op::operator()(const DisneyBSDF& bsdf) const
 {
     // Flip the shading frame if it is inconsistent with the geometry normal
-    Frame frame = vertex.shading_frame;
-    if (dot(frame.n, dir_in) * dot(vertex.geometric_normal, dir_in) < 0) {
+    Frame frame = vertex.shadingFrame;
+    if (Dot(frame.n, dir_in) * Dot(vertex.normal, dir_in) < 0) {
         frame = -frame;
     }
     // Homework 1: implement this!
@@ -42,5 +42,5 @@ std::optional<BSDFSampleRecord> sample_bsdf_op::operator()(const DisneyBSDF& bsd
 
 TextureSpectrum get_texture_op::operator()(const DisneyBSDF& bsdf) const
 {
-    return bsdf.base_color;
+    return bsdf.baseColor;
 }

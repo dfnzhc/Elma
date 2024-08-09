@@ -1,51 +1,57 @@
+#include <variant>
 #include "PhaseFunction.hpp"
 
 namespace elma {
 
-struct eval_op
+struct EvalOp
 {
     Spectrum operator()(const IsotropicPhase& p) const;
     Spectrum operator()(const HenyeyGreenstein& p) const;
 
-    const Vector3& dir_in;
-    const Vector3& dir_out;
+    const Vector3& dirIn;
+    const Vector3& dirOut;
 };
 
-struct sample_phase_function_op
+struct SamplePhaseFunctionOp
 {
     std::optional<Vector3> operator()(const IsotropicPhase& p) const;
     std::optional<Vector3> operator()(const HenyeyGreenstein& p) const;
 
-    const Vector3& dir_in;
-    const Vector2& rnd_param;
+    const Vector3& dirIn;
+    const Vector2& randParam;
 };
 
-struct pdf_sample_phase_op
+struct PdfSamplePhaseOp
 {
     Real operator()(const IsotropicPhase& p) const;
     Real operator()(const HenyeyGreenstein& p) const;
 
-    const Vector3& dir_in;
-    const Vector3& dir_out;
+    const Vector3& dirIn;
+    const Vector3& dirOut;
 };
 
 #include "PhaseFunctions/Isotropic.inl"
 #include "PhaseFunctions/HenyeyGreenstein.inl"
 
-Spectrum eval(const PhaseFunction& phase_function, const Vector3& dir_in, const Vector3& dir_out)
+Spectrum Eval(const std::variant<IsotropicPhase, HenyeyGreenstein>& phase_function,
+              const Vector3& dir_in,
+              const Vector3& dir_out)
 {
-    return std::visit(eval_op{dir_in, dir_out}, phase_function);
+    return std::visit(EvalOp{dir_in, dir_out}, phase_function);
 }
 
-std::optional<Vector3>
-sample_phase_function(const PhaseFunction& phase_function, const Vector3& dir_in, const Vector2& rnd_param)
+std::optional<Vector3> SamplePhaseFunction(const std::variant<IsotropicPhase, HenyeyGreenstein>& phase_function,
+                                           const Vector3& dir_in,
+                                           const Vector2& rnd_param)
 {
-    return std::visit(sample_phase_function_op{dir_in, rnd_param}, phase_function);
+    return std::visit(SamplePhaseFunctionOp{dir_in, rnd_param}, phase_function);
 }
 
-Real pdf_sample_phase(const PhaseFunction& phase_function, const Vector3& dir_in, const Vector3& dir_out)
+Real PdfSamplePhase(const std::variant<IsotropicPhase, HenyeyGreenstein>& phase_function,
+                    const Vector3& dir_in,
+                    const Vector3& dir_out)
 {
-    return std::visit(pdf_sample_phase_op{dir_in, dir_out}, phase_function);
+    return std::visit(PdfSamplePhaseOp{dir_in, dir_out}, phase_function);
 }
 
 } // namespace elma
