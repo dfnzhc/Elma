@@ -34,6 +34,17 @@ const Real kInvFourPi  = Real(1.0) / kFourPi;
 const Real kPiOverTwo  = Real(0.5) * kPi;
 const Real kPiOverFour = Real(0.25) * kPi;
 
+// clang-format off
+template <typename T> requires std::is_arithmetic_v<T>
+constexpr T kOne = static_cast<T>(1);
+template <typename T> requires std::is_arithmetic_v<T>
+constexpr T kTwo = static_cast<T>(2);
+template <typename T> requires std::is_floating_point_v<T>
+constexpr T kHalf = static_cast<T>(0.5);
+template <typename T> requires std::is_floating_point_v<T>
+constexpr T kQuarter = static_cast<T>(0.25);
+// clang-format on
+
 template<typename T> inline T Infinity()
 {
     return std::numeric_limits<T>::infinity();
@@ -84,6 +95,23 @@ inline Real Radians(const Real deg)
 inline Real Degrees(const Real rad)
 {
     return (Real(180) / kPi) * rad;
+}
+
+template <typename T>
+inline T Sqr(T x) noexcept
+{
+    return x * x;
+}
+
+template <typename T, typename U>
+inline constexpr T Clamp(T val, U low, U high)
+{
+    return std::min(std::max(val, static_cast<T>(low)), static_cast<T>(high));
+}
+
+inline Real Lerp(Real t, Real s1, Real s2)
+{
+    return (Real(1) - t) * s1 + t * s2;
 }
 
 } // namespace elma

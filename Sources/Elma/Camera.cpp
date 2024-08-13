@@ -38,10 +38,10 @@ Ray SamplePrimary(const Camera& camera, const Vector2& screen_pos)
                          (floor(pixel_pos.y) + Real(0.5) + offset.y) / camera.height};
 
     Vector3 pt  = TransformPoint(camera.sampleToCam, Vector3(remapped_pos[0], remapped_pos[1], Real(0)));
-    Vector3 dir = normalize(pt);
+    Vector3 dir = Normalize(pt);
     return Ray{TransformPoint(camera.camToWorld, Vector3{0, 0, 0}),
                // the last normalize might not be necessary
-               normalize(TransformVector(camera.camToWorld, dir)),
+               Normalize(TransformVector(camera.camToWorld, dir)),
                Real(0),
                Infinity<Real>()};
 }

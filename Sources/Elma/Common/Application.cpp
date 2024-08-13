@@ -34,6 +34,8 @@ struct RenderRecords
     Image3 acc;
     double accCount;
     Image4f display;
+
+    std::string sceneName;
 };
 
 RenderRecords renderRec;
@@ -58,6 +60,8 @@ Application::Application(const AppConfig& config)
     }
 
     scene->options.samplesPerPixel = 1;
+
+    renderRec.sceneName = std::filesystem::path(config.inputSceneFilename).stem().string();
 
     auto windowDesc   = config.windowDesc;
     windowDesc.width  = scene->camera.width;
@@ -116,8 +120,8 @@ void Application::renderFrame()
     glViewport(0, 0, w, h);
     const auto img = Render(*scene);
 
-    renderRec.accCount              += 1;
-    scene->options.accumulateCount  += 1;
+    renderRec.accCount             += 1;
+    scene->options.accumulateCount += 1;
 
     Real f = Real(1.0) / (std::max(0.001, renderRec.accCount));
     for (int y = 0; y < h; ++y) {
@@ -223,7 +227,7 @@ void Application::_initUI()
     (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
-    
+
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
     //ImGui::StyleColorsLight();
@@ -249,8 +253,9 @@ void Application::_renderUI()
 
     {
         ImGui::SetNextWindowBgAlpha(0.23f);
-        ImGui::Begin("Render Options");
-        ImGui::Text("Acc.Count = %lld", static_cast<uint64_t>(renderRec.accCount));
+        ImGui::Begin("Render Stats");
+        ImGui::Text("Scene: %s", renderRec.sceneName.c_str());
+        ImGui::Text("Acc Count = %lld", static_cast<uint64_t>(renderRec.accCount));
 
         ImGui::End();
     }

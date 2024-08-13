@@ -116,7 +116,7 @@ Spectrum PathTracing(const Scene& scene,
             // The geometry term is different between directional light sources and
             // others. Currently we only have environment maps as directional light sources.
             if (!IsEnvmap(light)) {
-                dir_light = normalize(point_on_light.position - vertex.position);
+                dir_light = Normalize(point_on_light.position - vertex.position);
                 // If the point on light is occluded, G is 0. So we need to test for occlusion.
                 // To avoid self intersection, we need to set the tnear of the ray
                 // to a small "epsilon". We set the epsilon to be a small constant times the

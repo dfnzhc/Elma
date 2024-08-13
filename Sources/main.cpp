@@ -15,7 +15,7 @@ inline int RunApp(int argc, char* argv[])
     AppConfig config;
     config.windowDesc.title           = "Elma - Path Tracing";
     config.windowDesc.resizableWindow = false;
-    config.inputSceneFilename         = "Data/Scenes/sponza/sponza.xml";
+    config.inputSceneFilename         = "Data/Scenes/disney_bsdf_test/disney_sheen.xml";
 
     config.numThreads = static_cast<int>(std::thread::hardware_concurrency()) - 1;
 //    std::string outputFile;

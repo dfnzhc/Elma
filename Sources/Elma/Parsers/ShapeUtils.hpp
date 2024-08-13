@@ -35,7 +35,7 @@ inline std::vector<Vector3> ComputeNormal(const std::vector<Vector3>& vertices, 
                 }
                 n = n / l;
             }
-            Real angle        = UnitAngle(normalize(side1), normalize(side2));
+            Real angle        = UnitAngle(Normalize(side1), Normalize(side2));
             normals[index[i]] = normals[index[i]] + n * angle;
         }
     }

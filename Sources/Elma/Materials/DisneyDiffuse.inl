@@ -9,12 +9,12 @@ Spectrum EvalOp::operator()(const DisneyDiffuse& bsdf) const
     if (Dot(frame.n, dirIn) < 0) {
         frame = -frame;
     }
-
+    
     // Homework 1: implement this!
     return MakeZeroSpectrum();
 }
 
-Real pdf_sample_bsdf_op::operator()(const DisneyDiffuse& bsdf) const
+Real PdfSampleBSDFOp::operator()(const DisneyDiffuse& bsdf) const
 {
     if (Dot(vertex.normal, dir_in) < 0 || Dot(vertex.normal, dir_out) < 0) {
         // No light below the surface
@@ -30,15 +30,15 @@ Real pdf_sample_bsdf_op::operator()(const DisneyDiffuse& bsdf) const
     return Real(0);
 }
 
-std::optional<BSDFSampleRecord> sample_bsdf_op::operator()(const DisneyDiffuse& bsdf) const
+std::optional<BSDFSampleRecord> SampleBSDFOp::operator()(const DisneyDiffuse& bsdf) const
 {
-    if (Dot(vertex.normal, dir_in) < 0) {
+    if (Dot(vertex.normal, dirIn) < 0) {
         // No light below the surface
         return {};
     }
     // Flip the shading frame if it is inconsistent with the geometry normal
     Frame frame = vertex.shadingFrame;
-    if (Dot(frame.n, dir_in) < 0) {
+    if (Dot(frame.n, dirIn) < 0) {
         frame = -frame;
     }
 

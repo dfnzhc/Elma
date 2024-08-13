@@ -11326,7 +11326,7 @@ PUGI__NS_BEGIN
 					if (argc == 1 && args[0]->rettype() != xpath_type_node_set) return error("Function has to be applied to node set");
 					return alloc_node(argc == 0 ? ast_func_namespace_uri_0 : ast_func_namespace_uri_1, xpath_type_string, args[0]);
 				}
-				else if (name == PUGIXML_TEXT("normalize-space") && argc <= 1)
+				else if (name == PUGIXML_TEXT("Normalize-space") && argc <= 1)
 					return alloc_node(argc == 0 ? ast_func_normalize_space_0 : ast_func_normalize_space_1, xpath_type_string, args[0], args[1]);
 				else if (name == PUGIXML_TEXT("not") && argc == 1)
 					return alloc_node(ast_func_not, xpath_type_boolean, args[0]);

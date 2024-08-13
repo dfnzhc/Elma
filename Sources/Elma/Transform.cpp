@@ -26,7 +26,7 @@ Matrix4x4 Scale(const Vector3& s)
 
 Matrix4x4 Rotate(Real angle, const Vector3& axis)
 {
-    Vector3 a = normalize(axis);
+    Vector3 a = Normalize(axis);
     Real s    = sin(Radians(angle));
     Real c    = cos(Radians(angle));
     Matrix4x4 m;
@@ -55,9 +55,9 @@ Matrix4x4 Rotate(Real angle, const Vector3& axis)
 Matrix4x4 LookAt(const Vector3& pos, const Vector3& look, const Vector3& up)
 {
     Matrix4x4 m;
-    Vector3 dir = normalize(look - pos);
-    assert(Length(Cross(normalize(up), dir)) != 0);
-    Vector3 left   = normalize(Cross(normalize(up), dir));
+    Vector3 dir = Normalize(look - pos);
+    assert(Length(Cross(Normalize(up), dir)) != 0);
+    Vector3 left   = Normalize(Cross(Normalize(up), dir));
     Vector3 new_up = Cross(dir, left);
     
     m(0, 0) = left[0];
@@ -109,7 +109,7 @@ Vector3 TransformVector(const Matrix4x4& xform, const Vector3& vec)
 
 Vector3 TransformNormal(const Matrix4x4& inv_xform, const Vector3& n)
 {
-    return normalize(Vector3{inv_xform(0, 0) * n[0] + inv_xform(1, 0) * n[1] + inv_xform(2, 0) * n[2],
+    return Normalize(Vector3{inv_xform(0, 0) * n[0] + inv_xform(1, 0) * n[1] + inv_xform(2, 0) * n[2],
                              inv_xform(0, 1) * n[0] + inv_xform(1, 1) * n[1] + inv_xform(2, 1) * n[2],
                              inv_xform(0, 2) * n[0] + inv_xform(1, 2) * n[1] + inv_xform(2, 2) * n[2]});
 }

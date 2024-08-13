@@ -1650,7 +1650,7 @@ std::unique_ptr<Scene> ParseScene(pugi::xml_node node, const RTCDevice& embree_d
                         intensity = ParseIntensity(grand_child, default_map);
                     }
                 }
-                direction = normalize(direction);
+                direction = Normalize(direction);
                 Vector3 tangent, bitangent;
                 std::tie(tangent, bitangent) = CoordinateSystem(-direction);
                 TriangleMesh mesh;

@@ -44,6 +44,11 @@ inline Real Avg(const Spectrum& s)
     return (s.x + s.y + s.z) / 3;
 }
 
+inline Spectrum Lerp(const Spectrum& s0, const Spectrum& s1, Real t)
+{
+    return (Real(1) - t) * s0 + t * s1;
+}
+
 inline Vector3 ToRGB(const Spectrum& s)
 {
     return s;

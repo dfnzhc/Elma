@@ -18,12 +18,12 @@ Spectrum EvalOp::operator()(const RoughDielectric& bsdf) const
 
     Vector3 half_vector;
     if (reflect) {
-        half_vector = normalize(dirIn + dirOut);
+        half_vector = Normalize(dirIn + dirOut);
     }
     else {
         // "Generalized half-vector" from Walter et al.
         // See "Microfacet Models for Refraction through Rough Surfaces"
-        half_vector = normalize(dirIn + dirOut * eta);
+        half_vector = Normalize(dirIn + dirOut * eta);
     }
 
     // Flip half-vector if it's below surface
@@ -70,7 +70,7 @@ Spectrum EvalOp::operator()(const RoughDielectric& bsdf) const
     }
 }
 
-Real pdf_sample_bsdf_op::operator()(const RoughDielectric& bsdf) const
+Real PdfSampleBSDFOp::operator()(const RoughDielectric& bsdf) const
 {
     bool reflect = Dot(vertex.normal, dir_in) * Dot(vertex.normal, dir_out) > 0;
     // Flip the shading frame if it is inconsistent with the geometry normal
@@ -85,12 +85,12 @@ Real pdf_sample_bsdf_op::operator()(const RoughDielectric& bsdf) const
 
     Vector3 half_vector;
     if (reflect) {
-        half_vector = normalize(dir_in + dir_out);
+        half_vector = Normalize(dir_in + dir_out);
     }
     else {
         // "Generalized half-vector" from Walter et al.
         // See "Microfacet Models for Refraction through Rough Surfaces"
-        half_vector = normalize(dir_in + dir_out * eta);
+        half_vector = Normalize(dir_in + dir_out * eta);
     }
 
     // Flip half-vector if it's below surface
@@ -120,23 +120,23 @@ Real pdf_sample_bsdf_op::operator()(const RoughDielectric& bsdf) const
     }
 }
 
-std::optional<BSDFSampleRecord> sample_bsdf_op::operator()(const RoughDielectric& bsdf) const
+std::optional<BSDFSampleRecord> SampleBSDFOp::operator()(const RoughDielectric& bsdf) const
 {
     // If we are going into the surface, then we use normal eta
     // (internal/external), otherwise we use external/internal.
-    Real eta = Dot(vertex.normal, dir_in) > 0 ? bsdf.eta : 1 / bsdf.eta;
+    Real eta = Dot(vertex.normal, dirIn) > 0 ? bsdf.eta : 1 / bsdf.eta;
     // Flip the shading frame if it is inconsistent with the geometry normal
     Frame frame = vertex.shadingFrame;
-    if (Dot(frame.n, dir_in) * Dot(vertex.normal, dir_in) < 0) {
+    if (Dot(frame.n, dirIn) * Dot(vertex.normal, dirIn) < 0) {
         frame = -frame;
     }
-    Real roughness = Eval(bsdf.roughness, vertex.uv, vertex.uvScreenSize, texture_pool);
+    Real roughness = Eval(bsdf.roughness, vertex.uv, vertex.uvScreenSize, texturePool);
     // Clamp roughness to avoid numerical issues.
     roughness = std::clamp(roughness, Real(0.01), Real(1));
     // Sample a micro normal and transform it to world space -- this is our half-vector.
     Real alpha                 = roughness * roughness;
-    Vector3 local_dir_in       = ToLocal(frame, dir_in);
-    Vector3 local_micro_normal = elma::SampleVisibleNormals(local_dir_in, alpha, rnd_param_uv);
+    Vector3 local_dir_in       = ToLocal(frame, dirIn);
+    Vector3 local_micro_normal = elma::SampleVisibleNormals(local_dir_in, alpha, rndParamUV);
 
     Vector3 half_vector = ToWorld(frame, local_micro_normal);
     // Flip half-vector if it's below surface
@@ -146,12 +146,12 @@ std::optional<BSDFSampleRecord> sample_bsdf_op::operator()(const RoughDielectric
 
     // Now we need to decide whether to reflect or refract.
     // We do this using the Fresnel term.
-    Real h_dot_in = Dot(half_vector, dir_in);
+    Real h_dot_in = Dot(half_vector, dirIn);
     Real F        = elma::FresnelDielectric(h_dot_in, eta);
 
-    if (rnd_param_w <= F) {
+    if (rndParamW <= F) {
         // Reflection
-        Vector3 reflected = normalize(-dir_in + 2 * Dot(dir_in, half_vector) * half_vector);
+        Vector3 reflected = Normalize(-dirIn + 2 * Dot(dirIn, half_vector) * half_vector);
         // set eta to 0 since we are not transmitting
         return BSDFSampleRecord{reflected, Real(0) /* eta */, roughness};
     }
@@ -170,7 +170,7 @@ std::optional<BSDFSampleRecord> sample_bsdf_op::operator()(const RoughDielectric
             half_vector = -half_vector;
         }
         Real h_dot_out    = std::sqrt(h_dot_out_sq);
-        Vector3 refracted = -dir_in / eta + (fabs(h_dot_in) / eta - h_dot_out) * half_vector;
+        Vector3 refracted = -dirIn / eta + (fabs(h_dot_in) / eta - h_dot_out) * half_vector;
         return BSDFSampleRecord{refracted, eta, roughness};
     }
 }

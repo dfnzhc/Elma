@@ -225,7 +225,7 @@ template<typename T> inline T Length(const TVector3<T>& v)
     return std::sqrt(LengthSquared(v));
 }
 
-template<typename T> inline TVector3<T> normalize(const TVector3<T>& v0)
+template<typename T> inline TVector3<T> Normalize(const TVector3<T>& v0)
 {
     auto l = Length(v0);
     if (l <= 0) {
@@ -279,6 +279,71 @@ template<typename T> inline std::ostream& operator<<(std::ostream& os, const TVe
 template<typename T> inline std::ostream& operator<<(std::ostream& os, const TVector3<T>& v)
 {
     return os << "(" << v[0] << ", " << v[1] << ", " << v[2] << ")";
+}
+
+inline Real CosTheta(const Vector3& w)
+{
+    return w.z;
+}
+
+inline Real Cos2Theta(const Vector3& w)
+{
+    return Sqr(w.z);
+}
+
+inline Real AbsCosTheta(const Vector3& w)
+{
+    return std::abs(w.z);
+}
+
+inline Real Sin2Theta(const Vector3& w)
+{
+    return std::max<Real>(0, 1 - Cos2Theta(w));
+}
+
+inline Real SinTheta(const Vector3& w)
+{
+    return std::sqrt(Sin2Theta(w));
+}
+
+inline Real TanTheta(const Vector3& w)
+{
+    return SinTheta(w) / CosTheta(w);
+}
+
+inline Real Tan2Theta(const Vector3& w)
+{
+    return Sin2Theta(w) / Cos2Theta(w);
+}
+
+inline Real CosPhi(const Vector3& w)
+{
+    const auto sinTheta = SinTheta(w);
+    return (sinTheta == 0) ? 1 : Clamp(w.x / sinTheta, -1, 1);
+}
+
+inline Real SinPhi(const Vector3& w)
+{
+    const auto sinTheta = SinTheta(w);
+    return (sinTheta == 0) ? 0 : Clamp(w.y / sinTheta, -1, 1);
+}
+
+template<typename T> inline T AbsDot(const TVector3<T>& v0, const TVector3<T>& v1)
+{
+    return std::abs(Dot(v0, v1));
+}
+
+inline Vector2 SampleUniformDiskPolar(const Vector2& uv)
+{
+    const auto r     = std::sqrt(uv[0]);
+    const auto theta = 2 * kPi * uv[1];
+
+    return {r * std::cos(theta), r * std::sin(theta)};
+}
+
+template<typename T> inline T LengthSquared(const TVector2<T>& v)
+{
+    return Sqr(v.x) + Sqr(v.y);
 }
 
 } // namespace elma

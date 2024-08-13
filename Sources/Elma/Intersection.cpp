@@ -46,7 +46,7 @@ std::optional<PathVertex> Intersect(const Scene& scene, const Ray& ray, const Ra
     PathVertex vertex;
     vertex.position =
         Vector3{ray.org.x, ray.org.y, ray.org.z} + Vector3{ray.dir.x, ray.dir.y, ray.dir.z} * Real(rtc_ray.tfar);
-    vertex.normal             = normalize(Vector3{rtc_hit.Ng_x, rtc_hit.Ng_y, rtc_hit.Ng_z});
+    vertex.normal             = Normalize(Vector3{rtc_hit.Ng_x, rtc_hit.Ng_y, rtc_hit.Ng_z});
     vertex.shapeId            = rtc_hit.geomID;
     vertex.primitiveId        = rtc_hit.primID;
     const Shape& shape        = scene.shapes[vertex.shapeId];

@@ -34,14 +34,13 @@ PointAndNormal SamplePointOnShapeOp::operator()(const TriangleMesh &mesh) const 
     Real a = std::sqrt(std::clamp(uv[0], Real(0), Real(1)));
     Real b1 = 1 - a;
     Real b2 = a * uv[1];
-    Vector3 geometric_normal = normalize(Cross(e1, e2));
+    Vector3 geometric_normal = Normalize(Cross(e1, e2));
     // Flip the geometric normal to the same side as the shading normal
     if (mesh.normals.size() > 0) {
         Vector3 n0 = mesh.normals[index[0]];
         Vector3 n1 = mesh.normals[index[1]];
         Vector3 n2 = mesh.normals[index[2]];
-        Vector3 shading_normal = normalize(
-            (1 - b1 - b2) * n0 + b1 * n1 + b2 * n2);
+        Vector3 shading_normal = Normalize((1 - b1 - b2) * n0 + b1 * n1 + b2 * n2);
         if (Dot(geometric_normal, shading_normal) < 0) {
             geometric_normal = -geometric_normal;
         }
@@ -140,13 +139,10 @@ ShadingInfo ComputeShadingInfoOp::operator()(const TriangleMesh &mesh) const {
         Vector3 n0 = mesh.normals[index[0]],
                 n1 = mesh.normals[index[1]],
                 n2 = mesh.normals[index[2]];
-        shading_normal = normalize(
-            (1 - vertex.st[0] - vertex.st[1]) * n0 + 
-                                vertex.st[0] * n1 +
-                                vertex.st[1] * n2);
+        shading_normal = Normalize((1 - vertex.st[0] - vertex.st[1]) * n0 + vertex.st[0] * n1 + vertex.st[1] * n2);
         // dpdu may not be orthogonal to shading normal:
         // subtract the projection of shading_normal onto dpdu to make them orthogonal
-        tangent = normalize(dpdu - shading_normal * Dot(shading_normal, dpdu));
+        tangent = Normalize(dpdu - shading_normal * Dot(shading_normal, dpdu));
 
         // We want to compute dn/du & dn/dv for mean curvature.
         // This is computed in a similar way to dpdu.
@@ -155,11 +151,11 @@ ShadingInfo ComputeShadingInfoOp::operator()(const TriangleMesh &mesh) const {
         Vector3 dndt = n2 - n1;
         Vector3 dndu = dnds * dsdu + dndt * dtdu;
         Vector3 dndv = dnds * dsdv + dndt * dtdv;
-        bitangent = normalize(Cross(shading_normal, tangent));
+        bitangent = Normalize(Cross(shading_normal, tangent));
         mean_curvature = (Dot(dndu, tangent) + Dot(dndv, bitangent)) / Real(2);
     } else {
-        tangent = normalize(dpdu - shading_normal * Dot(shading_normal, dpdu));
-        bitangent = normalize(Cross(shading_normal, tangent));
+        tangent = Normalize(dpdu - shading_normal * Dot(shading_normal, dpdu));
+        bitangent = Normalize(Cross(shading_normal, tangent));
     }
 
     Frame shading_frame(tangent, bitangent, shading_normal);

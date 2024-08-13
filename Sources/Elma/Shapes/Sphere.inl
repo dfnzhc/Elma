@@ -180,7 +180,7 @@ PointAndNormal SamplePointOnShapeOp::operator()(const Sphere &sphere) const {
     // Otherwise sample a ray inside a cone towards the sphere center.
 
     // Build a coordinate system with n pointing towards the sphere
-    Vector3 dir_to_center = normalize(center - ref_point);
+    Vector3 dir_to_center = Normalize(center - ref_point);
     Frame frame(dir_to_center);
 
     // These are not exactly "elevation" and "azimuth": elevation here
@@ -228,7 +228,7 @@ Real PdfPointOnShapeOp::operator()(const Sphere &sphere) const {
     // Convert it back to area measure
     Vector3 p_on_sphere = pointOnShape.position;
     Vector3 n_on_sphere = pointOnShape.normal;
-    Vector3 dir = normalize(p_on_sphere - refPoint);
+    Vector3 dir = Normalize(p_on_sphere - refPoint);
     return pdf_solid_angle * std::fabs(Dot(n_on_sphere, dir)) / DistanceSquared(refPoint, p_on_sphere);
 }
 
@@ -251,10 +251,8 @@ ShadingInfo ComputeShadingInfoOp::operator()(const Sphere &sphere) const {
                  -sphere.radius * std::sin(vertex.st[1])};
     // dpdu may not be orthogonal to shading normal:
     // subtract the projection of shading_normal onto dpdu to make them orthogonal
-    Vector3 tangent = normalize(
-        dpdu - vertex.normal * Dot(vertex.normal, dpdu));
-    Frame shading_frame(tangent,
-                        normalize(Cross(vertex.normal, tangent)),
+    Vector3 tangent = Normalize(dpdu - vertex.normal * Dot(vertex.normal, dpdu));
+    Frame shading_frame(tangent, Normalize(Cross(vertex.normal, tangent)),
                         vertex.normal);
     return ShadingInfo{vertex.st,
                        shading_frame,

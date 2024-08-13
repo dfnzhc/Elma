@@ -131,7 +131,7 @@ TriangleMesh ParseObj(const fs::path& filename, const Matrix4x4& to_world)
         else if (token == "vn") {
             Real x, y, z;
             ss >> x >> y >> z;
-            nor_pool.push_back(normalize(Vector3{x, y, z}));
+            nor_pool.push_back(Normalize(Vector3{x, y, z}));
         }
         else if (token == "f") {
             std::string i0, i1, i2;

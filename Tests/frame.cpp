@@ -3,7 +3,7 @@
 
 int main(int argc, char* argv[])
 {
-    Frame f(normalize(Vector3{0.3, 0.4, 0.5}));
+    Frame f(Normalize(Vector3{0.3, 0.4, 0.5}));
     Vector3 v       = Vector3{-1, -2, -3};
     Vector3 local_v = to_local(f, v);
     Vector3 world_v = to_world(f, local_v);

@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     // We'll just make sure sampling & PDF are consistent
     Vector2 rnd_param_uv{Real(0.3), Real(0.4)};
     Real rnd_param_w{Real(0.6)};
-    Vector3 dir_in = normalize(Vector3{0.3, 0.4, 0.5});
+    Vector3 dir_in = Normalize(Vector3{0.3, 0.4, 0.5});
     PathVertex vertex;
     vertex.normal           = Vector3{0, 0, 1};
     vertex.shadingFrame     = Frame(vertex.normal);
@@ -90,10 +90,10 @@ int main(int argc, char* argv[])
             bool reflect = dot(vertex.normal, dir_in) * dot(vertex.normal, sample_0->dirOut) > 0;
             Vector3 half_vector;
             if (reflect) {
-                half_vector = normalize(dir_in + sample_0->dirOut);
+                half_vector = Normalize(dir_in + sample_0->dirOut);
             }
             else {
-                half_vector = normalize(dir_in + sample_0->dirOut * Real(1.5));
+                half_vector = Normalize(dir_in + sample_0->dirOut * Real(1.5));
             }
             Real h_dot_in = dot(half_vector, dir_in);
             Real F        = fresnel_dielectric(h_dot_in, Real(1.5));
@@ -120,10 +120,10 @@ int main(int argc, char* argv[])
             bool reflect = dot(vertex.normal, dir_in) * dot(vertex.normal, sample_1->dirOut) > 0;
             Vector3 half_vector;
             if (reflect) {
-                half_vector = normalize(dir_in + sample_1->dirOut);
+                half_vector = Normalize(dir_in + sample_1->dirOut);
             }
             else {
-                half_vector = normalize(dir_in + sample_1->dirOut * Real(1.5));
+                half_vector = Normalize(dir_in + sample_1->dirOut * Real(1.5));
             }
             Real h_dot_in = dot(half_vector, dir_in);
             Real F        = fresnel_dielectric(h_dot_in, Real(1.5));

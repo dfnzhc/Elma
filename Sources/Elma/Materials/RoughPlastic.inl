@@ -18,7 +18,7 @@ Spectrum EvalOp::operator()(const RoughPlastic& bsdf) const
     // of the mirror our ray hits (since applying reflection of dir_in over half_vector
     // gives us dir_out). Microfacet models build all sorts of quantities based on the
     // half vector. It's also called the "micro normal".
-    Vector3 half_vector = normalize(dirIn + dirOut);
+    Vector3 half_vector = Normalize(dirIn + dirOut);
     Real n_dot_h        = Dot(frame.n, half_vector);
     Real n_dot_in       = Dot(frame.n, dirIn);
     Real n_dot_out      = Dot(frame.n, dirOut);
@@ -59,7 +59,7 @@ Spectrum EvalOp::operator()(const RoughPlastic& bsdf) const
     return (spec_contrib + diffuse_contrib) * n_dot_out;
 }
 
-Real pdf_sample_bsdf_op::operator()(const RoughPlastic& bsdf) const
+Real PdfSampleBSDFOp::operator()(const RoughPlastic& bsdf) const
 {
     if (Dot(vertex.normal, dir_in) < 0 || Dot(vertex.normal, dir_out) < 0) {
         // No light below the surface
@@ -71,7 +71,7 @@ Real pdf_sample_bsdf_op::operator()(const RoughPlastic& bsdf) const
         frame = -frame;
     }
 
-    Vector3 half_vector = normalize(dir_in + dir_out);
+    Vector3 half_vector = Normalize(dir_in + dir_out);
     Real n_dot_in       = Dot(frame.n, dir_in);
     Real n_dot_out      = Dot(frame.n, dir_out);
     Real n_dot_h        = Dot(frame.n, half_vector);
@@ -104,41 +104,41 @@ Real pdf_sample_bsdf_op::operator()(const RoughPlastic& bsdf) const
     return spec_prob + diff_prob;
 }
 
-std::optional<BSDFSampleRecord> sample_bsdf_op::operator()(const RoughPlastic& bsdf) const
+std::optional<BSDFSampleRecord> SampleBSDFOp::operator()(const RoughPlastic& bsdf) const
 {
-    if (Dot(vertex.normal, dir_in) < 0) {
+    if (Dot(vertex.normal, dirIn) < 0) {
         // No light below the surface
         return {};
     }
     // Flip the shading frame if it is inconsistent with the geometry normal
     Frame frame = vertex.shadingFrame;
-    if (Dot(frame.n, dir_in) < 0) {
+    if (Dot(frame.n, dirIn) < 0) {
         frame = -frame;
     }
 
     // We use the reflectance to choose between sampling the dielectric or diffuse layer.
-    Spectrum Ks = Eval(bsdf.specularReflectance, vertex.uv, vertex.uvScreenSize, texture_pool);
-    Spectrum Kd = Eval(bsdf.diffuseReflectance, vertex.uv, vertex.uvScreenSize, texture_pool);
+    Spectrum Ks = Eval(bsdf.specularReflectance, vertex.uv, vertex.uvScreenSize, texturePool);
+    Spectrum Kd = Eval(bsdf.diffuseReflectance, vertex.uv, vertex.uvScreenSize, texturePool);
     Real lS = Luminance(Ks), lR = Luminance(Kd);
     if (lS + lR <= 0) {
         return {};
     }
     Real spec_prob = lS / (lS + lR);
-    if (rnd_param_w < spec_prob) {
+    if (rndParamW < spec_prob) {
         // Sample from the specular lobe.
 
         // Convert the incoming direction to local coordinates
-        Vector3 local_dir_in = ToLocal(frame, dir_in);
-        Real roughness       = Eval(bsdf.roughness, vertex.uv, vertex.uvScreenSize, texture_pool);
+        Vector3 local_dir_in = ToLocal(frame, dirIn);
+        Real roughness       = Eval(bsdf.roughness, vertex.uv, vertex.uvScreenSize, texturePool);
         // Clamp roughness to avoid numerical issues.
         roughness                  = std::clamp(roughness, Real(0.01), Real(1));
         Real alpha                 = roughness * roughness;
-        Vector3 local_micro_normal = elma::SampleVisibleNormals(local_dir_in, alpha, rnd_param_uv);
+        Vector3 local_micro_normal = elma::SampleVisibleNormals(local_dir_in, alpha, rndParamUV);
 
         // Transform the micro normal to world space
         Vector3 half_vector = ToWorld(frame, local_micro_normal);
         // Reflect over the world space normal
-        Vector3 reflected = normalize(-dir_in + 2 * Dot(dir_in, half_vector) * half_vector);
+        Vector3 reflected = Normalize(-dirIn + 2 * Dot(dirIn, half_vector) * half_vector);
         return BSDFSampleRecord{
           reflected, Real(0) /* eta */, roughness /* roughness */
         };
@@ -146,7 +146,7 @@ std::optional<BSDFSampleRecord> sample_bsdf_op::operator()(const RoughPlastic& b
     else {
         // Lambertian sampling
         return BSDFSampleRecord{
-          ToWorld(frame, sample_cos_hemisphere(rnd_param_uv)), Real(0) /* eta */, Real(1) /* roughness */};
+          ToWorld(frame, SampleCosHemisphere(rndParamUV)), Real(0) /* eta */, Real(1) /* roughness */};
     }
 }
 
