@@ -33,7 +33,7 @@ struct RenderRecords
 {
     Image3 acc;
     double accCount;
-    Image4f display;
+    Image3f display;
 
     std::string sceneName;
 };
@@ -73,7 +73,7 @@ Application::Application(const AppConfig& config)
 
     renderRec.acc      = Image3{scene->camera.width, scene->camera.height};
     renderRec.accCount = 0;
-    renderRec.display  = Image4f{scene->camera.width, scene->camera.height};
+    renderRec.display  = Image3f{scene->camera.width, scene->camera.height};
 
     _initUI();
 }
@@ -87,6 +87,25 @@ Application::~Application()
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
+//    {
+//        const auto w = scene->camera.width;
+//        const auto h = scene->camera.height;
+//        Image3 img{w, h};
+//        
+//        const auto f = Real(1.0) / (std::max(0.001, renderRec.accCount));
+//        for (int y = 0; y < h; ++y) {
+//            for (int x = 0; x < w; ++x) {
+//                const auto acc = renderRec.acc(x, y);
+//                
+//                img(x, y).x = (Real)(std::clamp(acc.x * f, 0., 1.));
+//                img(x, y).y = (Real)(std::clamp(acc.y * f, 0., 1.));
+//                img(x, y).z = (Real)(std::clamp(acc.z * f, 0., 1.));
+//            }
+//        }
+//        
+//        ImageWrite("output.exr", img);
+//    }
+    
     /// 销毁各种部件
     _pWindow.reset();
 
@@ -119,9 +138,15 @@ void Application::renderFrame()
 
     glViewport(0, 0, w, h);
     const auto img = Render(*scene);
+    
 
     renderRec.accCount             += 1;
     scene->options.accumulateCount += 1;
+//    
+//    if (renderRec.accCount == 1)
+//    {
+//        ImageWrite("output.exr", img);
+//    }
 
     Real f = Real(1.0) / (std::max(0.001, renderRec.accCount));
     for (int y = 0; y < h; ++y) {
@@ -137,7 +162,7 @@ void Application::renderFrame()
 
     glRasterPos2i(-1, 1);
     glPixelZoom(1.0f, -1.0f);
-    glDrawPixels(w, h, GL_RGBA, GL_FLOAT, renderRec.display.data.data());
+    glDrawPixels(w, h, GL_RGB, GL_FLOAT, renderRec.display.data.data());
 }
 
 void Application::shutdown(int returnCode)

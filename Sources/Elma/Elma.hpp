@@ -97,19 +97,17 @@ inline Real Degrees(const Real rad)
     return (Real(180) / kPi) * rad;
 }
 
-template <typename T>
-inline T Sqr(T x) noexcept
+template<typename T> inline T Sqr(T x) noexcept
 {
     return x * x;
 }
 
-template <typename T, typename U>
-inline constexpr T Clamp(T val, U low, U high)
+template<typename T, typename U> inline constexpr T Clamp(T val, U low, U high)
 {
     return std::min(std::max(val, static_cast<T>(low)), static_cast<T>(high));
 }
 
-inline Real Lerp(Real t, Real s1, Real s2)
+inline Real Lerp(Real s1, Real s2, Real t)
 {
     return (Real(1) - t) * s1 + t * s2;
 }

@@ -26,9 +26,9 @@ Spectrum EvalOp::operator()(const RoughPlastic& bsdf) const
         return MakeZeroSpectrum();
     }
 
-    Spectrum Kd    = Eval(bsdf.diffuseReflectance, vertex.uv, vertex.uvScreenSize, texture_pool);
-    Spectrum Ks    = Eval(bsdf.specularReflectance, vertex.uv, vertex.uvScreenSize, texture_pool);
-    Real roughness = Eval(bsdf.roughness, vertex.uv, vertex.uvScreenSize, texture_pool);
+    Spectrum Kd    = Eval(bsdf.diffuseReflectance, vertex.uv, vertex.uvScreenSize, texturePool);
+    Spectrum Ks    = Eval(bsdf.specularReflectance, vertex.uv, vertex.uvScreenSize, texturePool);
+    Real roughness = Eval(bsdf.roughness, vertex.uv, vertex.uvScreenSize, texturePool);
     // Clamp roughness to avoid numerical issues.
     roughness = std::clamp(roughness, Real(0.01), Real(1));
 
@@ -61,31 +61,31 @@ Spectrum EvalOp::operator()(const RoughPlastic& bsdf) const
 
 Real PdfSampleBSDFOp::operator()(const RoughPlastic& bsdf) const
 {
-    if (Dot(vertex.normal, dir_in) < 0 || Dot(vertex.normal, dir_out) < 0) {
+    if (Dot(vertex.normal, dirIn) < 0 || Dot(vertex.normal, dirOut) < 0) {
         // No light below the surface
         return 0;
     }
     // Flip the shading frame if it is inconsistent with the geometry normal
     Frame frame = vertex.shadingFrame;
-    if (Dot(frame.n, dir_in) < 0) {
+    if (Dot(frame.n, dirIn) < 0) {
         frame = -frame;
     }
 
-    Vector3 half_vector = Normalize(dir_in + dir_out);
-    Real n_dot_in       = Dot(frame.n, dir_in);
-    Real n_dot_out      = Dot(frame.n, dir_out);
+    Vector3 half_vector = Normalize(dirIn + dirOut);
+    Real n_dot_in       = Dot(frame.n, dirIn);
+    Real n_dot_out      = Dot(frame.n, dirOut);
     Real n_dot_h        = Dot(frame.n, half_vector);
     if (n_dot_out <= 0 || n_dot_h <= 0) {
         return 0;
     }
 
-    Spectrum S = Eval(bsdf.specularReflectance, vertex.uv, vertex.uvScreenSize, texture_pool);
-    Spectrum R = Eval(bsdf.diffuseReflectance, vertex.uv, vertex.uvScreenSize, texture_pool);
+    Spectrum S = Eval(bsdf.specularReflectance, vertex.uv, vertex.uvScreenSize, texturePool);
+    Spectrum R = Eval(bsdf.diffuseReflectance, vertex.uv, vertex.uvScreenSize, texturePool);
     Real lS = Luminance(S), lR = Luminance(R);
     if (lS + lR <= 0) {
         return 0;
     }
-    Real roughness = Eval(bsdf.roughness, vertex.uv, vertex.uvScreenSize, texture_pool);
+    Real roughness = Eval(bsdf.roughness, vertex.uv, vertex.uvScreenSize, texturePool);
     // Clamp roughness to avoid numerical issues.
     roughness = std::clamp(roughness, Real(0.01), Real(1));
     // We use the reflectance to determine whether to choose specular sampling lobe or diffuse.
@@ -95,7 +95,7 @@ Real PdfSampleBSDFOp::operator()(const RoughPlastic& bsdf) const
     // "Sampling the GGX Distribution of Visible Normals"
     // https://jcgt.org/published/0007/04/01/
     // this importance samples smith_masking(cos_theta_in) * GTR2(cos_theta_h, roughness) * cos_theta_out
-    Real G = elma::SmithMaskingGTR2(ToLocal(frame, dir_in), roughness);
+    Real G = elma::SmithMaskingGTR2(ToLocal(frame, dirIn), roughness);
     Real D = elma::GTR2(n_dot_h, roughness);
     // (4 * cos_theta_v) is the Jacobian of the reflectiokn
     spec_prob *= (G * D) / (4 * n_dot_in);

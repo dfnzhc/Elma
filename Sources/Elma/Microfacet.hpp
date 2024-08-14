@@ -36,19 +36,29 @@ inline Real FresnelDielectric(Real n_dot_i, Real eta)
     return FresnelDielectric(std::abs(n_dot_i), n_dot_t, eta);
 }
 
-inline Real GTR1(Real n_dot_h, Real roughness)
+inline Real GTR1(Real n_dot_h, Real alpha)
 {
-    const auto alpha = roughness * roughness;
-    const auto a2    = alpha * alpha;
+    const auto a2 = alpha * alpha;
     return (a2 - kOne<Real>) / (kPi * std::log2(a2) * (kOne<Real> + (a2 - kOne<Real>)*n_dot_h * n_dot_h));
 }
 
-inline Real SmithGGXG1(const Vector3& v_local, Real roughness)
+inline Real SmithMaskingGGXG1(const Vector3& v_local, Real roughness)
 {
     const auto alpha    = roughness * roughness;
     const auto a2       = alpha * alpha;
     const auto absDotNV = AbsCosTheta(v_local);
     return kTwo<Real> / (kOne<Real> + std::sqrt(a2 + (kOne<Real> - a2) * absDotNV * absDotNV));
+}
+
+inline Real GGXAnisotropic(const Vector3& h_local, Real ax, Real ay)
+{
+    const auto hx2 = h_local.x * h_local.x;
+    const auto hy2 = h_local.y * h_local.y;
+    const auto hz2 = h_local.z * h_local.z;
+    const auto ax2 = Sqr(ax);
+    const auto ay2 = Sqr(ay);
+
+    return kOne<Real> / (kPi * ax * ay * Sqr(hx2 / ax2 + hy2 / ay2 + hz2));
 }
 
 inline Real GTR2(Real n_dot_h, Real roughness)
@@ -66,10 +76,19 @@ inline Real GGX(Real n_dot_h, Real roughness)
 
 inline Real SmithMaskingGTR2(const Vector3& v_local, Real roughness)
 {
-    Real alpha  = roughness * roughness;
-    Real a2     = alpha * alpha;
-    Vector3 v2  = v_local * v_local;
-    Real Lambda = (-1 + std::sqrt(1 + (v2.x * a2 + v2.y * a2) / v2.z)) / 2;
+    const auto alpha  = roughness * roughness;
+    const auto a2     = alpha * alpha;
+    const auto v2     = v_local * v_local;
+    const auto Lambda = (-1 + std::sqrt(1 + (v2.x * a2 + v2.y * a2) / v2.z)) / 2;
+    return 1 / (1 + Lambda);
+}
+
+inline Real SmithMaskingGTR2Anisotropic(const Vector3& v_local, Real ax, Real ay)
+{
+    const auto ax2    = ax * ax;
+    const auto ay2    = ay * ay;
+    const auto v2     = v_local * v_local;
+    const auto Lambda = (-1 + std::sqrt(1 + (v2.x * ax2 + v2.y * ay2) / v2.z)) / 2;
     return 1 / (1 + Lambda);
 }
 
@@ -109,4 +128,36 @@ inline Vector3 SampleVisibleNormals(const Vector3& local_dir_in, Real alpha, con
     // Transforming the normal back to the ellipsoid configuration
     return Normalize(Vector3{alpha * hemi_N.x, alpha * hemi_N.y, Max(Real(0), hemi_N.z)});
 }
+
+inline Vector3 SampleVisibleNormalsAnisotropic(const Vector3& local_dir_in, Real ax, Real ay, const Vector2& rnd_param)
+{
+    // The incoming direction is in the "ellipsodial configuration" in Heitz's paper
+    if (local_dir_in.z < 0) {
+        // Ensure the input is on top of the surface.
+        return -SampleVisibleNormalsAnisotropic(-local_dir_in, ax, ay, rnd_param);
+    }
+
+    // Transform the incoming direction to the "hemisphere configuration".
+    Vector3 hemi_dir_in = Normalize(Vector3{ax * local_dir_in.x, ay * local_dir_in.y, local_dir_in.z});
+
+    // Parameterization of the projected area of a hemisphere.
+    // First, sample a disk.
+    Real r   = std::sqrt(rnd_param.x);
+    Real phi = 2 * kPi * rnd_param.y;
+    Real t1  = r * std::cos(phi);
+    Real t2  = r * std::sin(phi);
+    // Vertically scale the position of a sample to account for the projection.
+    Real s = (1 + hemi_dir_in.z) / 2;
+    t2     = (1 - s) * std::sqrt(1 - t1 * t1) + s * t2;
+    // Point in the disk space
+    Vector3 disk_N{t1, t2, std::sqrt(Max(Real(0), 1 - t1 * t1 - t2 * t2))};
+
+    // Reprojection onto hemisphere -- we get our sampled normal in hemisphere space.
+    Frame hemi_frame(hemi_dir_in);
+    Vector3 hemi_N = ToWorld(hemi_frame, disk_N);
+
+    // Transforming the normal back to the ellipsoid configuration
+    return Normalize(Vector3{ax * hemi_N.x, ay * hemi_N.y, Max(Real(0), hemi_N.z)});
+}
+
 } // namespace elma

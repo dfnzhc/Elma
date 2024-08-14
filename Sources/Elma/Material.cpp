@@ -21,11 +21,12 @@ struct EvalOp
     Spectrum operator()(const DisneyClearcoat& bsdf) const;
     Spectrum operator()(const DisneySheen& bsdf) const;
     Spectrum operator()(const DisneyBSDF& bsdf) const;
+    Spectrum operator()(const DisneyMetal& bsdf, Real specular, Real metallic, Real specularTint, Real eta) const;
 
     const Vector3& dirIn;
     const Vector3& dirOut;
     const PathVertex& vertex;
-    const TexturePool& texture_pool;
+    const TexturePool& texturePool;
     const TransportDirection& dir;
 };
 
@@ -41,10 +42,10 @@ struct PdfSampleBSDFOp
     Real operator()(const DisneySheen& bsdf) const;
     Real operator()(const DisneyBSDF& bsdf) const;
 
-    const Vector3& dir_in;
-    const Vector3& dir_out;
+    const Vector3& dirIn;
+    const Vector3& dirOut;
     const PathVertex& vertex;
-    const TexturePool& texture_pool;
+    const TexturePool& texturePool;
     const TransportDirection& dir;
 };
 

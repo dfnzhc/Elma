@@ -12,9 +12,9 @@ Spectrum EvalOp::operator()(const RoughDielectric& bsdf) const
     // (internal/external), otherwise we use external/internal.
     Real eta = Dot(vertex.normal, dirIn) > 0 ? bsdf.eta : 1 / bsdf.eta;
 
-    Spectrum Ks    = Eval(bsdf.specularReflectance, vertex.uv, vertex.uvScreenSize, texture_pool);
-    Spectrum Kt    = Eval(bsdf.specularTransmittance, vertex.uv, vertex.uvScreenSize, texture_pool);
-    Real roughness = Eval(bsdf.roughness, vertex.uv, vertex.uvScreenSize, texture_pool);
+    Spectrum Ks    = Eval(bsdf.specularReflectance, vertex.uv, vertex.uvScreenSize, texturePool);
+    Spectrum Kt    = Eval(bsdf.specularTransmittance, vertex.uv, vertex.uvScreenSize, texturePool);
+    Real roughness = Eval(bsdf.roughness, vertex.uv, vertex.uvScreenSize, texturePool);
 
     Vector3 half_vector;
     if (reflect) {
@@ -47,7 +47,7 @@ Spectrum EvalOp::operator()(const RoughDielectric& bsdf) const
     Real G        = elma::SmithMaskingGTR2(ToLocal(frame, dirIn), roughness) *
              elma::SmithMaskingGTR2(ToLocal(frame, dirOut), roughness);
     if (reflect) {
-        return Ks * (F * D * G) / (4 * fabs(Dot(frame.n, dirIn)));
+        return Ks * (F * D * G) / (4 * std::abs(Dot(frame.n, dirIn)));
     }
     else {
         // Snell-Descartes law predicts that the light will contract/expand
@@ -65,32 +65,32 @@ Spectrum EvalOp::operator()(const RoughDielectric& bsdf) const
         Real sqrt_denom = h_dot_in + eta * h_dot_out;
         // Very complicated BSDF. See Walter et al.'s paper for more details.
         // "Microfacet Models for Refraction through Rough Surfaces"
-        return Kt * (eta_factor * (1 - F) * D * G * eta * eta * fabs(h_dot_out * h_dot_in)) /
-               (fabs(Dot(frame.n, dirIn)) * sqrt_denom * sqrt_denom);
+        return Kt * (eta_factor * (1 - F) * D * G * eta * eta * std::abs(h_dot_out * h_dot_in)) /
+               (std::abs(Dot(frame.n, dirIn)) * sqrt_denom * sqrt_denom);
     }
 }
 
 Real PdfSampleBSDFOp::operator()(const RoughDielectric& bsdf) const
 {
-    bool reflect = Dot(vertex.normal, dir_in) * Dot(vertex.normal, dir_out) > 0;
+    bool reflect = Dot(vertex.normal, dirIn) * Dot(vertex.normal, dirOut) > 0;
     // Flip the shading frame if it is inconsistent with the geometry normal
     Frame frame = vertex.shadingFrame;
-    if (Dot(frame.n, dir_in) * Dot(vertex.normal, dir_in) < 0) {
+    if (Dot(frame.n, dirIn) * Dot(vertex.normal, dirIn) < 0) {
         frame = -frame;
     }
     // If we are going into the surface, then we use normal eta
     // (internal/external), otherwise we use external/internal.
-    Real eta = Dot(vertex.normal, dir_in) > 0 ? bsdf.eta : 1 / bsdf.eta;
+    Real eta = Dot(vertex.normal, dirIn) > 0 ? bsdf.eta : 1 / bsdf.eta;
     assert(eta > 0);
 
     Vector3 half_vector;
     if (reflect) {
-        half_vector = Normalize(dir_in + dir_out);
+        half_vector = Normalize(dirIn + dirOut);
     }
     else {
         // "Generalized half-vector" from Walter et al.
         // See "Microfacet Models for Refraction through Rough Surfaces"
-        half_vector = Normalize(dir_in + dir_out * eta);
+        half_vector = Normalize(dirIn + dirOut * eta);
     }
 
     // Flip half-vector if it's below surface
@@ -98,25 +98,25 @@ Real PdfSampleBSDFOp::operator()(const RoughDielectric& bsdf) const
         half_vector = -half_vector;
     }
 
-    Real roughness = Eval(bsdf.roughness, vertex.uv, vertex.uvScreenSize, texture_pool);
+    Real roughness = Eval(bsdf.roughness, vertex.uv, vertex.uvScreenSize, texturePool);
     // Clamp roughness to avoid numerical issues.
     roughness = std::clamp(roughness, Real(0.01), Real(1));
 
     // We sample the visible normals, also we use F to determine
     // whether to sample reflection or refraction
     // so PDF ~ F * D * G_in for reflection, PDF ~ (1 - F) * D * G_in for refraction.
-    Real h_dot_in = Dot(half_vector, dir_in);
+    Real h_dot_in = Dot(half_vector, dirIn);
     Real F        = elma::FresnelDielectric(h_dot_in, eta);
     Real D        = elma::GTR2(Dot(half_vector, frame.n), roughness);
-    Real G_in     = elma::SmithMaskingGTR2(ToLocal(frame, dir_in), roughness);
+    Real G_in     = elma::SmithMaskingGTR2(ToLocal(frame, dirIn), roughness);
     if (reflect) {
-        return (F * D * G_in) / (4 * std::fabs(Dot(frame.n, dir_in)));
+        return (F * D * G_in) / (4 * std::fabs(Dot(frame.n, dirIn)));
     }
     else {
-        Real h_dot_out  = Dot(half_vector, dir_out);
+        Real h_dot_out  = Dot(half_vector, dirOut);
         Real sqrt_denom = h_dot_in + eta * h_dot_out;
         Real dh_dout    = eta * eta * h_dot_out / (sqrt_denom * sqrt_denom);
-        return (1 - F) * D * G_in * fabs(dh_dout * h_dot_in / Dot(frame.n, dir_in));
+        return (1 - F) * D * G_in * fabs(dh_dout * h_dot_in / Dot(frame.n, dirIn));
     }
 }
 

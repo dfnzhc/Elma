@@ -346,4 +346,11 @@ template<typename T> inline T LengthSquared(const TVector2<T>& v)
     return Sqr(v.x) + Sqr(v.y);
 }
 
+template<typename T>
+inline TVector3<T> Reflect(const TVector3<T>& in, const TVector3<T>& normal)
+{
+    return Normalize(-in + kTwo<Real> * Dot(in, normal) * normal);
+}
+
+
 } // namespace elma

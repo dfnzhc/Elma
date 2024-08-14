@@ -12,23 +12,23 @@ Spectrum EvalOp::operator()(const Lambertian& bsdf) const
         frame = -frame;
     }
 
-    return fmax(Dot(frame.n, dirOut), Real(0)) * Eval(bsdf.reflectance, vertex.uv, vertex.uvScreenSize, texture_pool) / kPi;
+    return fmax(Dot(frame.n, dirOut), Real(0)) * Eval(bsdf.reflectance, vertex.uv, vertex.uvScreenSize, texturePool) / kPi;
 }
 
 Real PdfSampleBSDFOp::operator()(const Lambertian& bsdf) const
 {
-    if (Dot(vertex.normal, dir_in) < 0 || Dot(vertex.normal, dir_out) < 0) {
+    if (Dot(vertex.normal, dirIn) < 0 || Dot(vertex.normal, dirOut) < 0) {
         // No light below the surface
         return Real(0);
     }
     // Flip the shading frame if it is inconsistent with the geometry normal
     Frame frame = vertex.shadingFrame;
-    if (Dot(frame.n, dir_in) < 0) {
+    if (Dot(frame.n, dirIn) < 0) {
         frame = -frame;
     }
 
     // For Lambertian, we importance sample the cosine hemisphere domain.
-    return fmax(Dot(frame.n, dir_out), Real(0)) / kPi;
+    return fmax(Dot(frame.n, dirOut), Real(0)) / kPi;
 }
 
 std::optional<BSDFSampleRecord> SampleBSDFOp::operator()(const Lambertian& bsdf) const
